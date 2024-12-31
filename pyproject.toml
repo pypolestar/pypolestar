@@ -2,34 +2,45 @@
 name = "pypolestar"
 version = "1.1.1"
 description = "Library to control Polestar"
-authors = ["Tuen Lee <leeyuentuen@gmail.com>"]
+authors = ["Tuen Lee <leeyuentuen@gmail.com>", "Jakob Schlyter <jakob@kirei.se>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/leeyuentuen/pypolestar"
-packages = [ 
-    { "include" = "pypolestar" }
-]
-
-[tool.poetry.urls]
-"Bug Tracker" = "https://github.com/leeyuentuen/pypolestar/issues"
-"Changelog" = "https://github.com/leeyuentuen/pypolestar/blob/master/CHANGELOG.md"
+repository = "https://github.com/pypolestar/pypolestar"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-asyncio = "^3.4.3"
-httpx = "^0.18.2"
+python = "^3.11"
+httpx = ">=0.27.2"
+gql = {version = "^3.5.0", extras = ["httpx"]}
 
-[tool.semantic_release]
-branch = "main"
-version_tool = "pyproject.toml:tool.poetry.version"
-version_variable = "pypolestar/__init__.py:__version__"
-build_command = "pip install poetry && poetry build"
-
-[tools.isort]
-profile = "black"
-known_first_party = ["pypolestar"]
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+ruff = "^0.8.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.ruff]
+line-length = 88
+required-version = ">=0.6.8"
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+split-on-trailing-comma = false
