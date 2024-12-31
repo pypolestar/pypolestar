@@ -1,1 +1,5 @@
-__version__ = "1.3.1"
+"""Python Polestar API."""
+
+from importlib.metadata import version
+
+__version__ = version("pypolestar")
