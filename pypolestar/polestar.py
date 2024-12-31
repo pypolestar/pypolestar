@@ -5,6 +5,7 @@ import threading
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta
+from typing import Any
 
 import httpx
 from gql.client import AsyncClientSession
@@ -48,9 +49,9 @@ class PolestarApi:
         self.username = username
         self.auth = PolestarAuth(username, password, self.client_session, unique_id)
         self.updating = threading.Lock()
-        self.latest_call_code = None
-        self.next_update = None
-        self.data_by_vin: dict[str, dict] = defaultdict(dict)
+        self.latest_call_code: int | None = None
+        self.next_update: datetime | None = None
+        self.data_by_vin: dict[str, dict[str, Any]] = defaultdict(dict)
         self.next_update_delay = timedelta(seconds=5)
         self.configured_vins = set(vins) if vins else None
         self.available_vins: set[str] = set()
@@ -78,10 +79,7 @@ class PolestarApi:
             vin = data["vin"]
             if self.configured_vins and vin not in self.configured_vins:
                 continue
-            self.data_by_vin[vin][CAR_INFO_DATA] = {
-                "data": data,
-                "timestamp": datetime.now(),
-            }
+            self.data_by_vin[vin][CAR_INFO_DATA] = data
             self.available_vins.add(vin)
             self.logger.debug("API setup for VIN %s", vin)
 
@@ -91,6 +89,7 @@ class PolestarApi:
             self.logger.warning("Could not found configured VINs %s", missing_vins)
 
     async def async_logout(self) -> None:
+        """Log out from Polestar API."""
         await self.auth.async_logout()
 
     def get_available_vins(self) -> list[str]:
@@ -109,9 +108,10 @@ class PolestarApi:
             KeyError: If the VIN doesn't exist
             ValueError: If data conversion fails
         """
-        if vin not in self.available_vins:
-            raise KeyError(vin)
-        if data := self.data_by_vin[vin].get(CAR_INFO_DATA, {}).get("data"):
+
+        self._ensure_data_for_vin(vin)
+
+        if data := self.data_by_vin[vin].get(CAR_INFO_DATA):
             try:
                 return CarInformationData.from_dict(data)
             except Exception as exc:
@@ -124,14 +124,15 @@ class PolestarApi:
         Args:
             vin: The vehicle identification number
         Returns:
-            CarInformatiCarBatteryDataonData if data exists, None otherwise
+            CarBatteryData if data exists, None otherwise
         Raises:
             KeyError: If the VIN doesn't exist
             ValueError: If data conversion fails
         """
-        if vin not in self.available_vins:
-            raise KeyError(vin)
-        if data := self.data_by_vin[vin].get(BATTERY_DATA, {}).get("data"):
+
+        self._ensure_data_for_vin(vin)
+
+        if data := self.data_by_vin[vin].get(BATTERY_DATA):
             try:
                 return CarBatteryData.from_dict(data)
             except Exception as exc:
@@ -149,39 +150,33 @@ class PolestarApi:
             KeyError: If the VIN doesn't exist
             ValueError: If data conversion fails
         """
-        if vin not in self.available_vins:
-            raise KeyError(vin)
-        if data := self.data_by_vin[vin].get(ODO_METER_DATA, {}).get("data"):
+
+        self._ensure_data_for_vin(vin)
+
+        if data := self.data_by_vin[vin].get(ODO_METER_DATA):
             try:
                 return CarOdometerData.from_dict(data)
             except Exception as exc:
                 raise ValueError("Failed to convert car odometer data") from exc
 
-    def get_latest_data(self, vin: str, query: str, field_name: str) -> dict | None:
-        """Get the latest data from the Polestar API."""
-        self.logger.debug(
-            "get_latest_data %s %s %s",
-            vin,
-            query,
-            field_name,
-        )
-        query_result = self.data_by_vin[vin].get(query)
-        if query_result and (data := query_result.get("data")) is not None:
+    def get_latest_data(
+        self,
+        vin: str,
+        query: str,
+        field_name: str,
+    ) -> dict[str, Any] | None:
+        """Get the latest (unparsed) data from the Polestar API."""
+
+        self.logger.debug("get_latest_data %s %s %s", vin, query, field_name)
+        if data := self.data_by_vin[vin].get(query):
             return self._get_field_name_value(field_name, data)
         self.logger.debug(
-            "get_latest_data returning None for %s %s %s",
-            vin,
-            query,
-            field_name,
+            "get_latest_data returning None for %s %s %s", vin, query, field_name
         )
         return None
 
     async def get_ev_data(self, vin: str) -> None:
-        """
-        Get the latest ev data from the Polestar API.
-
-        Currently updates data for all VINs (this might change in the future).
-        """
+        """Get the latest data from the Polestar API."""
 
         if not self.updating.acquire(blocking=False):
             self.logger.debug("Skipping update, already in progress")
@@ -224,9 +219,11 @@ class PolestarApi:
         self.logger.debug("Update took %.2f seconds", t2 - t1)
 
     @staticmethod
-    def _get_field_name_value(field_name: str, data: dict) -> str | bool | None:
-        if field_name is None or data is None:
-            return None
+    def _get_field_name_value(
+        field_name: str,
+        data: dict[str, Any],
+    ) -> str | bool | None:
+        """Extract field from GraphQL response"""
 
         if "/" in field_name:
             field_names = field_name.split("/")
@@ -250,10 +247,7 @@ class PolestarApi:
             variable_values={"vin": vin},
         )
 
-        res = self.data_by_vin[vin][ODO_METER_DATA] = {
-            "data": result[ODO_METER_DATA],
-            "timestamp": datetime.now(),
-        }
+        res = self.data_by_vin[vin][ODO_METER_DATA] = result[ODO_METER_DATA]
 
         self.logger.debug("Received odometer data: %s", res)
 
@@ -263,19 +257,19 @@ class PolestarApi:
             variable_values={"vin": vin},
         )
 
-        res = self.data_by_vin[vin][BATTERY_DATA] = {
-            "data": result[BATTERY_DATA],
-            "timestamp": datetime.now(),
-        }
+        res = self.data_by_vin[vin][BATTERY_DATA] = result[BATTERY_DATA]
 
         self.logger.debug("Received battery data: %s", res)
 
-    async def _get_vehicle_data(self, verbose: bool = False) -> dict | None:
+    async def _get_vehicle_data(self, verbose: bool = False) -> dict[str, Any] | None:
         """Get the latest vehicle data from the Polestar API."""
+
         result = await self._query_graph_ql(
-            query=QUERY_GET_CONSUMER_CARS_V2_VERBOSE
-            if verbose
-            else QUERY_GET_CONSUMER_CARS_V2,
+            query=(
+                QUERY_GET_CONSUMER_CARS_V2_VERBOSE
+                if verbose
+                else QUERY_GET_CONSUMER_CARS_V2
+            ),
             variable_values={"locale": "en_GB"},
         )
 
@@ -285,11 +279,20 @@ class PolestarApi:
 
         return result[CAR_INFO_DATA]
 
+    def _ensure_data_for_vin(self, vin: str) -> None:
+        """Ensure we have data for given VIN"""
+
+        if vin not in self.available_vins:
+            raise KeyError(f"VIN {vin} not available")
+
+        if vin not in self.data_by_vin:
+            raise KeyError(f"No data for VIN {vin}")
+
     async def _query_graph_ql(
         self,
         query: DocumentNode,
         operation_name: str | None = None,
-        variable_values: dict | None = None,
+        variable_values: dict[str, Any] | None = None,
     ):
         if self.gql_session is None:
             raise RuntimeError("GraphQL not connected")
