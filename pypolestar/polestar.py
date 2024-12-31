@@ -88,6 +88,7 @@ class PolestarApi:
             self.logger.warning("Could not found configured VINs %s", missing_vins)
 
     async def async_logout(self) -> None:
+        """Log out from Polestar API."""
         await self.auth.async_logout()
 
     def get_available_vins(self) -> list[str]:
@@ -106,8 +107,10 @@ class PolestarApi:
             KeyError: If the VIN doesn't exist
             ValueError: If data conversion fails
         """
+
         if vin not in self.available_vins:
             raise KeyError(vin)
+
         if data := self.data_by_vin[vin].get(CAR_INFO_DATA):
             try:
                 return CarInformationData.from_dict(data)
@@ -126,8 +129,10 @@ class PolestarApi:
             KeyError: If the VIN doesn't exist
             ValueError: If data conversion fails
         """
+
         if vin not in self.available_vins:
             raise KeyError(vin)
+
         if data := self.data_by_vin[vin].get(BATTERY_DATA):
             try:
                 return CarBatteryData.from_dict(data)
@@ -146,8 +151,10 @@ class PolestarApi:
             KeyError: If the VIN doesn't exist
             ValueError: If data conversion fails
         """
+
         if vin not in self.available_vins:
             raise KeyError(vin)
+
         if data := self.data_by_vin[vin].get(ODO_METER_DATA):
             try:
                 return CarOdometerData.from_dict(data)
@@ -155,29 +162,18 @@ class PolestarApi:
                 raise ValueError("Failed to convert car odometer data") from exc
 
     def get_latest_data(self, vin: str, query: str, field_name: str) -> dict | None:
-        """Get the latest data from the Polestar API."""
-        self.logger.debug(
-            "get_latest_data %s %s %s",
-            vin,
-            query,
-            field_name,
-        )
+        """Get the latest (unparsed) data from the Polestar API."""
+
+        self.logger.debug("get_latest_data %s %s %s", vin, query, field_name)
         if data := self.data_by_vin[vin].get(query):
             return self._get_field_name_value(field_name, data)
         self.logger.debug(
-            "get_latest_data returning None for %s %s %s",
-            vin,
-            query,
-            field_name,
+            "get_latest_data returning None for %s %s %s", vin, query, field_name
         )
         return None
 
     async def get_ev_data(self, vin: str) -> None:
-        """
-        Get the latest ev data from the Polestar API.
-
-        Currently updates data for all VINs (this might change in the future).
-        """
+        """Get the latest data from the Polestar API."""
 
         if not self.updating.acquire(blocking=False):
             self.logger.debug("Skipping update, already in progress")
