@@ -78,10 +78,7 @@ class PolestarApi:
             vin = data["vin"]
             if self.configured_vins and vin not in self.configured_vins:
                 continue
-            self.data_by_vin[vin][CAR_INFO_DATA] = {
-                "data": data,
-                "timestamp": datetime.now(),
-            }
+            self.data_by_vin[vin][CAR_INFO_DATA] = data
             self.available_vins.add(vin)
             self.logger.debug("API setup for VIN %s", vin)
 
@@ -111,7 +108,7 @@ class PolestarApi:
         """
         if vin not in self.available_vins:
             raise KeyError(vin)
-        if data := self.data_by_vin[vin].get(CAR_INFO_DATA, {}).get("data"):
+        if data := self.data_by_vin[vin].get(CAR_INFO_DATA):
             try:
                 return CarInformationData.from_dict(data)
             except Exception as exc:
@@ -131,7 +128,7 @@ class PolestarApi:
         """
         if vin not in self.available_vins:
             raise KeyError(vin)
-        if data := self.data_by_vin[vin].get(BATTERY_DATA, {}).get("data"):
+        if data := self.data_by_vin[vin].get(BATTERY_DATA):
             try:
                 return CarBatteryData.from_dict(data)
             except Exception as exc:
@@ -151,7 +148,7 @@ class PolestarApi:
         """
         if vin not in self.available_vins:
             raise KeyError(vin)
-        if data := self.data_by_vin[vin].get(ODO_METER_DATA, {}).get("data"):
+        if data := self.data_by_vin[vin].get(ODO_METER_DATA):
             try:
                 return CarOdometerData.from_dict(data)
             except Exception as exc:
@@ -165,8 +162,7 @@ class PolestarApi:
             query,
             field_name,
         )
-        query_result = self.data_by_vin[vin].get(query)
-        if query_result and (data := query_result.get("data")) is not None:
+        if data := self.data_by_vin[vin].get(query):
             return self._get_field_name_value(field_name, data)
         self.logger.debug(
             "get_latest_data returning None for %s %s %s",
@@ -250,10 +246,7 @@ class PolestarApi:
             variable_values={"vin": vin},
         )
 
-        res = self.data_by_vin[vin][ODO_METER_DATA] = {
-            "data": result[ODO_METER_DATA],
-            "timestamp": datetime.now(),
-        }
+        res = self.data_by_vin[vin][ODO_METER_DATA] = result[ODO_METER_DATA]
 
         self.logger.debug("Received odometer data: %s", res)
 
@@ -263,19 +256,18 @@ class PolestarApi:
             variable_values={"vin": vin},
         )
 
-        res = self.data_by_vin[vin][BATTERY_DATA] = {
-            "data": result[BATTERY_DATA],
-            "timestamp": datetime.now(),
-        }
+        res = self.data_by_vin[vin][BATTERY_DATA] = result[BATTERY_DATA]
 
         self.logger.debug("Received battery data: %s", res)
 
     async def _get_vehicle_data(self, verbose: bool = False) -> dict | None:
         """Get the latest vehicle data from the Polestar API."""
         result = await self._query_graph_ql(
-            query=QUERY_GET_CONSUMER_CARS_V2_VERBOSE
-            if verbose
-            else QUERY_GET_CONSUMER_CARS_V2,
+            query=(
+                QUERY_GET_CONSUMER_CARS_V2_VERBOSE
+                if verbose
+                else QUERY_GET_CONSUMER_CARS_V2
+            ),
             variable_values={"locale": "en_GB"},
         )
 
