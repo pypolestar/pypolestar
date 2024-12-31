@@ -121,7 +121,7 @@ class PolestarApi:
         Args:
             vin: The vehicle identification number
         Returns:
-            CarInformatiCarBatteryDataonData if data exists, None otherwise
+            CarBatteryData if data exists, None otherwise
         Raises:
             KeyError: If the VIN doesn't exist
             ValueError: If data conversion fails
