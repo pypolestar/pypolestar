@@ -1,3 +1,3 @@
-# pyPolestar
+# Python for Polestar
 
-Basic library to access Polestar Automobiles 
+This library is not an official app affiliated with Polestar Automotive.
