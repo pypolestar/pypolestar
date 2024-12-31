@@ -5,6 +5,7 @@ import threading
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta
+from typing import Any
 
 import httpx
 from gql.client import AsyncClientSession
@@ -277,7 +278,7 @@ class PolestarApi:
         self,
         query: DocumentNode,
         operation_name: str | None = None,
-        variable_values: dict | None = None,
+        variable_values: dict[str, Any] | None = None,
     ):
         if self.gql_session is None:
             raise RuntimeError("GraphQL not connected")
