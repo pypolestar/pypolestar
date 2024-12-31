@@ -49,9 +49,9 @@ class PolestarApi:
         self.username = username
         self.auth = PolestarAuth(username, password, self.client_session, unique_id)
         self.updating = threading.Lock()
-        self.latest_call_code = None
-        self.next_update = None
-        self.data_by_vin: dict[str, dict] = defaultdict(dict)
+        self.latest_call_code: int | None = None
+        self.next_update: datetime | None = None
+        self.data_by_vin: dict[str, dict[str, Any]] = defaultdict(dict)
         self.next_update_delay = timedelta(seconds=5)
         self.configured_vins = set(vins) if vins else None
         self.available_vins: set[str] = set()
@@ -162,7 +162,12 @@ class PolestarApi:
             except Exception as exc:
                 raise ValueError("Failed to convert car odometer data") from exc
 
-    def get_latest_data(self, vin: str, query: str, field_name: str) -> dict | None:
+    def get_latest_data(
+        self,
+        vin: str,
+        query: str,
+        field_name: str,
+    ) -> dict[str, Any] | None:
         """Get the latest (unparsed) data from the Polestar API."""
 
         self.logger.debug("get_latest_data %s %s %s", vin, query, field_name)
@@ -217,9 +222,11 @@ class PolestarApi:
         self.logger.debug("Update took %.2f seconds", t2 - t1)
 
     @staticmethod
-    def _get_field_name_value(field_name: str, data: dict) -> str | bool | None:
-        if field_name is None or data is None:
-            return None
+    def _get_field_name_value(
+        field_name: str,
+        data: dict[str, Any],
+    ) -> str | bool | None:
+        """Extract field from GraphQL response"""
 
         if "/" in field_name:
             field_names = field_name.split("/")
@@ -257,8 +264,9 @@ class PolestarApi:
 
         self.logger.debug("Received battery data: %s", res)
 
-    async def _get_vehicle_data(self, verbose: bool = False) -> dict | None:
+    async def _get_vehicle_data(self, verbose: bool = False) -> dict[str, Any] | None:
         """Get the latest vehicle data from the Polestar API."""
+
         result = await self._query_graph_ql(
             query=(
                 QUERY_GET_CONSUMER_CARS_V2_VERBOSE
