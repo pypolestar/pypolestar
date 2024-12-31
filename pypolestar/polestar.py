@@ -109,8 +109,7 @@ class PolestarApi:
             ValueError: If data conversion fails
         """
 
-        if vin not in self.available_vins:
-            raise KeyError(vin)
+        self._ensure_data_for_vin(vin)
 
         if data := self.data_by_vin[vin].get(CAR_INFO_DATA):
             try:
@@ -131,8 +130,7 @@ class PolestarApi:
             ValueError: If data conversion fails
         """
 
-        if vin not in self.available_vins:
-            raise KeyError(vin)
+        self._ensure_data_for_vin(vin)
 
         if data := self.data_by_vin[vin].get(BATTERY_DATA):
             try:
@@ -153,8 +151,7 @@ class PolestarApi:
             ValueError: If data conversion fails
         """
 
-        if vin not in self.available_vins:
-            raise KeyError(vin)
+        self._ensure_data_for_vin(vin)
 
         if data := self.data_by_vin[vin].get(ODO_METER_DATA):
             try:
@@ -281,6 +278,15 @@ class PolestarApi:
             raise PolestarNoDataException("No cars found in account")
 
         return result[CAR_INFO_DATA]
+
+    def _ensure_data_for_vin(self, vin: str) -> None:
+        """Ensure we have data for given VIN"""
+
+        if vin not in self.available_vins:
+            raise KeyError(f"VIN {vin} not available")
+
+        if vin not in self.data_by_vin:
+            raise KeyError(f"No data for VIN {vin}")
 
     async def _query_graph_ql(
         self,
