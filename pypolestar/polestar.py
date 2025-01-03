@@ -159,22 +159,6 @@ class PolestarApi:
             except Exception as exc:
                 raise ValueError("Failed to convert car odometer data") from exc
 
-    def get_latest_data(
-        self,
-        vin: str,
-        query: str,
-        field_name: str,
-    ) -> dict[str, Any] | None:
-        """Get the latest (unparsed) data from the Polestar API."""
-
-        self.logger.debug("get_latest_data %s %s %s", vin, query, field_name)
-        if data := self.data_by_vin[vin].get(query):
-            return self._get_field_name_value(field_name, data)
-        self.logger.debug(
-            "get_latest_data returning None for %s %s %s", vin, query, field_name
-        )
-        return None
-
     async def get_ev_data(self, vin: str) -> None:
         """Get the latest data from the Polestar API."""
 
@@ -217,27 +201,6 @@ class PolestarApi:
 
         t2 = time.perf_counter()
         self.logger.debug("Update took %.2f seconds", t2 - t1)
-
-    @staticmethod
-    def _get_field_name_value(
-        field_name: str,
-        data: dict[str, Any],
-    ) -> str | bool | None:
-        """Extract field from GraphQL response"""
-
-        if "/" in field_name:
-            field_names = field_name.split("/")
-            for key in field_names:
-                if isinstance(data, dict) and key in data:
-                    data = data[key]
-                else:
-                    return None
-            return data
-
-        if isinstance(data, dict) and field_name in data:
-            return data[field_name]
-
-        return None
 
     async def _get_odometer_data(self, vin: str) -> None:
         """Get the latest odometer data from the Polestar API."""
