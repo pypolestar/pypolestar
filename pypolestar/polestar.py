@@ -140,7 +140,7 @@ class PolestarApi:
 
     def get_car_odometer(self, vin: str) -> CarOdometerData | None:
         """
-        Get car odomoter information for the specified VIN.
+        Get car odometer information for the specified VIN.
 
         Args:
             vin: The vehicle identification number
