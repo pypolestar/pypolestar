@@ -5,7 +5,7 @@ class PolestarApiException(Exception):
     """Base class for exceptions in this module."""
 
 
-class PolestarAuthException(Exception):
+class PolestarAuthException(PolestarApiException):
     """Base class for exceptions in Auth module."""
 
     error_code: int | None = None
@@ -17,9 +17,9 @@ class PolestarAuthException(Exception):
         self.error_code = error_code
 
 
-class PolestarNotAuthorizedException(Exception):
+class PolestarNotAuthorizedException(PolestarApiException):
     """Exception for unauthorized call."""
 
 
-class PolestarNoDataException(Exception):
+class PolestarNoDataException(PolestarApiException):
     """Exception for no data."""
