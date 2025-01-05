@@ -191,7 +191,8 @@ class PolestarApi:
         t1 = time.perf_counter()
 
         try:
-            await self.auth.get_token()
+            if self.auth.need_token_refresh():
+                await self.auth.get_token(force=True)
         except Exception as exc:
             self.latest_call_code = 500
             self.logger.warning("Auth Exception: %s", str(exc))
