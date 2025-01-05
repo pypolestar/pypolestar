@@ -40,18 +40,18 @@ class PolestarAuth:
         self.password = password
         self.client_session = client_session
 
-        self.access_token = None
-        self.id_token = None
-        self.refresh_token = None
-        self.token_lifetime = None
-        self.token_expiry = None
+        self.access_token: str | None = None
+        self.id_token: str | None = None
+        self.refresh_token: str | None = None
+        self.token_lifetime: int | None = None
+        self.token_expiry: datetime | None = None
 
         self.oidc_configuration = {}
         self.oidc_provider = OIDC_PROVIDER_BASE_URL
         self.oidc_code_verifier: str | None = None
         self.oidc_state: str | None = None
 
-        self.latest_call_code = None
+        self.latest_call_code: int | None = None
         self.logger = _LOGGER.getChild(unique_id) if unique_id else _LOGGER
 
     async def async_init(self) -> None:
@@ -101,7 +101,7 @@ class PolestarAuth:
             and self.token_expiry > datetime.now(tz=timezone.utc)
         )
 
-    async def get_token(self, refresh=False) -> None:
+    async def get_token(self, refresh: bool = False) -> None:
         """Get the token from Polestar."""
 
         if (
