@@ -192,18 +192,16 @@ class PolestarApi:
 
         try:
             if self.auth.need_token_refresh():
-                await self.auth.get_token(refresh=True)
-        except PolestarAuthException as e:
+                await self.auth.get_token(force=True)
+        except Exception as exc:
             self.latest_call_code = 500
-            self.logger.warning("Auth Exception: %s", str(e))
+            self.logger.warning("Auth Exception: %s", str(exc))
             self.updating.release()
             return
 
         async def call_api(func):
             try:
                 await func()
-            except PolestarNotAuthorizedException:
-                await self.auth.get_token()
             except PolestarApiException as e:
                 self.latest_call_code = 500
                 self.logger.warning("Failed to get %s data %s", func.__name__, str(e))
