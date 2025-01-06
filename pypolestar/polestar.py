@@ -160,6 +160,8 @@ class PolestarApi:
     async def get_ev_data(self, vin: str) -> None:
         """Get the latest data from the Polestar API."""
 
+        self._ensure_data_for_vin(vin)
+
         if not self.updating[vin].acquire(blocking=False):
             self.logger.debug("Skipping update, already in progress")
             return
