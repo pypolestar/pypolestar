@@ -4,7 +4,6 @@ import logging
 import threading
 import time
 from collections import defaultdict
-from datetime import datetime, timedelta
 from typing import Any
 
 import httpx
@@ -157,13 +156,13 @@ class PolestarApi:
             except Exception as exc:
                 raise ValueError("Failed to convert car odometer data") from exc
 
-    async def get_ev_data(self, vin: str) -> None:
+    async def get_latest_data(self, vin: str) -> None:
         """Get the latest data from the Polestar API."""
 
         self._ensure_data_for_vin(vin)
 
         if not self.updating[vin].acquire(blocking=False):
-            self.logger.debug("Skipping update, already in progress")
+            self.logger.debug("Skipping update for VIN %s, already in progress", vin)
             return
 
         try:
@@ -176,7 +175,7 @@ class PolestarApi:
             await self._get_battery_data(vin)
 
             t2 = time.perf_counter()
-            self.logger.debug("Update took %.2f seconds", t2 - t1)
+            self.logger.debug("Update for VIN %s took %.2f seconds", vin, t2 - t1)
 
         except Exception as exc:
             self.latest_call_code = 500
