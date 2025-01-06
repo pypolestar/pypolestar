@@ -205,7 +205,7 @@ class PolestarApi:
 
         self.logger.debug("Received battery data: %s", res)
 
-    async def _get_vehicle_data(self, verbose: bool = False) -> dict[str, Any] | None:
+    async def _get_vehicle_data(self, verbose: bool = False) -> list[dict[str, Any]]:
         """Get the latest vehicle data from the Polestar API."""
 
         result = await self._query_graph_ql(
