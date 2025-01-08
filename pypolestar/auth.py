@@ -104,7 +104,7 @@ class PolestarAuth:
     async def get_token(self, force: bool = False) -> None:
         """Ensure we have a valid access token (still valid, refreshed or initial)."""
 
-        if not force and self.need_token_refresh():
+        if not force and self.token_expiry and self.need_token_refresh():
             force = True
 
         if (
