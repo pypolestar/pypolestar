@@ -156,7 +156,7 @@ class PolestarApi:
             except Exception as exc:
                 raise ValueError("Failed to convert car odometer data") from exc
 
-    async def get_latest_data(self, vin: str) -> None:
+    async def update_latest_data(self, vin: str) -> None:
         """Get the latest data from the Polestar API."""
 
         self._ensure_data_for_vin(vin)
