@@ -6,7 +6,7 @@ This library is not an official app affiliated with Polestar Automotive.
 ## Example
 
 ```python
-from pypolestar.api import PolestarApi
+from pypolestar import PolestarApi
 
 api = PolestarApi(username=USERNAME, password=PASSWORD, vins=[VIN])
 
