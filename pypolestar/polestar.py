@@ -4,7 +4,6 @@ import logging
 import threading
 import time
 from collections import defaultdict
-from datetime import datetime, timedelta
 from typing import Any
 
 import httpx
@@ -48,11 +47,9 @@ class PolestarApi:
         self.client_session = client_session or httpx.AsyncClient()
         self.username = username
         self.auth = PolestarAuth(username, password, self.client_session, unique_id)
-        self.updating = threading.Lock()
+        self.updating: dict[str, threading.Lock] = defaultdict(threading.Lock)
         self.latest_call_code: int | None = None
-        self.next_update: datetime | None = None
         self.data_by_vin: dict[str, dict[str, Any]] = defaultdict(dict)
-        self.next_update_delay = timedelta(seconds=5)
         self.configured_vins = set(vins) if vins else None
         self.available_vins: set[str] = set()
         self.logger = _LOGGER.getChild(unique_id) if unique_id else _LOGGER
@@ -159,46 +156,32 @@ class PolestarApi:
             except Exception as exc:
                 raise ValueError("Failed to convert car odometer data") from exc
 
-    async def get_ev_data(self, vin: str) -> None:
+    async def update_latest_data(self, vin: str) -> None:
         """Get the latest data from the Polestar API."""
 
-        if not self.updating.acquire(blocking=False):
-            self.logger.debug("Skipping update, already in progress")
-            return
+        self._ensure_data_for_vin(vin)
 
-        if self.next_update is not None and self.next_update > datetime.now():
-            self.logger.debug("Skipping update, next update at %s", self.next_update)
-            self.updating.release()
+        if not self.updating[vin].acquire(blocking=False):
+            self.logger.debug("Skipping update for VIN %s, already in progress", vin)
             return
-
-        self.logger.debug("Starting update for VIN %s", vin)
-        t1 = time.perf_counter()
 
         try:
-            if self.auth.need_token_refresh():
-                await self.auth.get_token(force=True)
+            await self.auth.get_token()
+
+            self.logger.debug("Starting update for VIN %s", vin)
+            t1 = time.perf_counter()
+
+            await self._get_odometer_data(vin)
+            await self._get_battery_data(vin)
+
+            t2 = time.perf_counter()
+            self.logger.debug("Update for VIN %s took %.2f seconds", vin, t2 - t1)
+
         except Exception as exc:
             self.latest_call_code = 500
-            self.logger.warning("Auth Exception: %s", str(exc))
-            self.updating.release()
-            return
-
-        async def call_api(func):
-            try:
-                await func()
-            except PolestarApiException as e:
-                self.latest_call_code = 500
-                self.logger.warning("Failed to get %s data %s", func.__name__, str(e))
-
-        try:
-            await call_api(lambda: self._get_odometer_data(vin))
-            await call_api(lambda: self._get_battery_data(vin))
-            self.next_update = datetime.now() + self.next_update_delay
+            raise exc
         finally:
-            self.updating.release()
-
-        t2 = time.perf_counter()
-        self.logger.debug("Update took %.2f seconds", t2 - t1)
+            self.updating[vin].release()
 
     async def _get_odometer_data(self, vin: str) -> None:
         """Get the latest odometer data from the Polestar API."""
@@ -222,7 +205,7 @@ class PolestarApi:
 
         self.logger.debug("Received battery data: %s", res)
 
-    async def _get_vehicle_data(self, verbose: bool = False) -> dict[str, Any] | None:
+    async def _get_vehicle_data(self, verbose: bool = False) -> list[dict[str, Any]]:
         """Get the latest vehicle data from the Polestar API."""
 
         result = await self._query_graph_ql(
