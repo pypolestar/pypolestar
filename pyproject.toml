@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pypolestar"
-version = "1.1.1"
+version = "1.2.0"
 description = "Library to control Polestar"
 authors = ["Tuen Lee <leeyuentuen@gmail.com>", "Jakob Schlyter <jakob@kirei.se>"]
 license = "MIT"
