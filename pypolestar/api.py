@@ -180,7 +180,7 @@ class PolestarApi:
                 await self._get_battery_data(vin)
 
                 t2 = time.perf_counter()
-                self.logger.debug("Update for VIN %s took %.2f seconds", vin, t2 - t1)
+                self.logger.debug("Update for VIN %s took %.3f seconds", vin, t2 - t1)
 
             except Exception as exc:
                 self.latest_call_code = 500
