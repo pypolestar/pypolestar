@@ -1,8 +1,8 @@
+import asyncio
 import base64
 import hashlib
 import logging
 import os
-import threading
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urljoin, urlparse
 
@@ -55,7 +55,7 @@ class PolestarAuth:
         self.latest_call_code: int | None = None
         self.logger = _LOGGER.getChild(unique_id) if unique_id else _LOGGER
 
-        self.token_lock = threading.Lock()
+        self.token_lock = asyncio.Lock()
 
     async def async_init(self) -> None:
         await self.update_oidc_configuration()
@@ -111,7 +111,7 @@ class PolestarAuth:
     async def get_token(self, force: bool = False) -> None:
         """Ensure we have a valid access token (still valid, refreshed or initial)."""
 
-        with self.token_lock:
+        async with self.token_lock:
             if not force and self.token_expiry and self.need_token_refresh():
                 force = True
 
