@@ -1,7 +1,7 @@
 """Asynchronous Python client for the Polestar API.""" ""
 
+import asyncio
 import logging
-import threading
 import time
 from collections import defaultdict
 from typing import Any
@@ -47,7 +47,7 @@ class PolestarApi:
         self.client_session = client_session or httpx.AsyncClient()
         self.username = username
         self.auth = PolestarAuth(username, password, self.client_session, unique_id)
-        self.updating: dict[str, threading.Lock] = defaultdict(threading.Lock)
+        self.updating_locks: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
         self.latest_call_code: int | None = None
         self.data_by_vin: dict[str, dict[str, Any]] = defaultdict(dict)
         self.configured_vins = set(vins) if vins else None
@@ -165,27 +165,26 @@ class PolestarApi:
 
         self._ensure_data_for_vin(vin)
 
-        if not self.updating[vin].acquire(blocking=False):
+        if self.updating_locks[vin].locked():
             self.logger.debug("Skipping update for VIN %s, already in progress", vin)
             return
 
-        try:
-            await self.auth.get_token()
+        async with self.updating_locks[vin]:
+            try:
+                await self.auth.get_token()
 
-            self.logger.debug("Starting update for VIN %s", vin)
-            t1 = time.perf_counter()
+                self.logger.debug("Starting update for VIN %s", vin)
+                t1 = time.perf_counter()
 
-            await self._get_odometer_data(vin)
-            await self._get_battery_data(vin)
+                await self._get_odometer_data(vin)
+                await self._get_battery_data(vin)
 
-            t2 = time.perf_counter()
-            self.logger.debug("Update for VIN %s took %.2f seconds", vin, t2 - t1)
+                t2 = time.perf_counter()
+                self.logger.debug("Update for VIN %s took %.3f seconds", vin, t2 - t1)
 
-        except Exception as exc:
-            self.latest_call_code = 500
-            raise exc
-        finally:
-            self.updating[vin].release()
+            except Exception as exc:
+                self.latest_call_code = 500
+                raise exc
 
     async def _get_odometer_data(self, vin: str) -> None:
         """Get the latest odometer data from the Polestar API."""

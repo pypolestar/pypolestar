@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import hashlib
 import logging
@@ -54,6 +55,8 @@ class PolestarAuth:
         self.latest_call_code: int | None = None
         self.logger = _LOGGER.getChild(unique_id) if unique_id else _LOGGER
 
+        self.token_lock = asyncio.Lock()
+
     async def async_init(self) -> None:
         await self.update_oidc_configuration()
 
@@ -108,34 +111,35 @@ class PolestarAuth:
     async def get_token(self, force: bool = False) -> None:
         """Ensure we have a valid access token (still valid, refreshed or initial)."""
 
-        if not force and self.token_expiry and self.need_token_refresh():
-            force = True
+        async with self.token_lock:
+            if not force and self.token_expiry and self.need_token_refresh():
+                force = True
 
-        if (
-            not force
-            and self.access_token is not None
-            and self.token_expiry
-            and self.token_expiry > datetime.now(tz=timezone.utc)
-        ):
-            self.logger.debug("Token still valid until %s", self.token_expiry)
-            return
+            if (
+                not force
+                and self.access_token is not None
+                and self.token_expiry
+                and self.token_expiry > datetime.now(tz=timezone.utc)
+            ):
+                self.logger.debug("Token still valid until %s", self.token_expiry)
+                return
 
-        if self.refresh_token:
+            if self.refresh_token:
+                try:
+                    await self._token_refresh()
+                    self.logger.debug("Token refreshed")
+                    return
+                except Exception as exc:
+                    self.logger.warning(
+                        "Failed to refresh token, retry with code", exc_info=exc
+                    )
+
             try:
-                await self._token_refresh()
-                self.logger.debug("Token refreshed")
+                await self._authorization_code()
+                self.logger.debug("Initial token acquired")
                 return
             except Exception as exc:
-                self.logger.warning(
-                    "Failed to refresh token, retry with code", exc_info=exc
-                )
-
-        try:
-            await self._authorization_code()
-            self.logger.debug("Initial token acquired")
-            return
-        except Exception as exc:
-            raise PolestarAuthException("Unable to acquire initial token") from exc
+                raise PolestarAuthException("Unable to acquire initial token") from exc
 
     def _parse_token_response(self, response: httpx.Response) -> None:
         """Parse response from token endpoint and update token state."""
