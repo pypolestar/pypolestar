@@ -74,6 +74,10 @@ class PolestarAuth:
         self.oidc_code_verifier = None
         self.oidc_state = None
 
+    def get_status_code(self) -> int | None:
+        """Return HTTP-like status code"""
+        return self.latest_call_code
+
     async def update_oidc_configuration(self) -> None:
         result = await self.client_session.get(
             urljoin(OIDC_PROVIDER_BASE_URL, "/.well-known/openid-configuration")

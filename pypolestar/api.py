@@ -89,6 +89,10 @@ class PolestarApi:
         """Log out from Polestar API."""
         await self.auth.async_logout()
 
+    def get_status_code(self) -> int | None:
+        """Return HTTP-like status code"""
+        return self.latest_call_code
+
     def get_available_vins(self) -> list[str]:
         """Get list of all available VINs"""
         return list(self.available_vins)
