@@ -13,7 +13,7 @@ from graphql import DocumentNode
 
 from .auth import PolestarAuth
 from .const import API_MYSTAR_V2_URL, BATTERY_DATA, CAR_INFO_DATA, ODO_METER_DATA
-from .exception import (
+from .exceptions import (
     PolestarApiException,
     PolestarAuthException,
     PolestarNoDataException,

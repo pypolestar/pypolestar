@@ -16,7 +16,7 @@ from .const import (
     OIDC_SCOPE,
     TOKEN_REFRESH_WINDOW_MIN,
 )
-from .exception import PolestarAuthException
+from .exceptions import PolestarAuthException
 
 _LOGGER = logging.getLogger(__name__)
 
