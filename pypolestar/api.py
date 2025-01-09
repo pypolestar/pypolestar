@@ -13,7 +13,7 @@ from graphql import DocumentNode
 
 from .auth import PolestarAuth
 from .const import API_MYSTAR_V2_URL, BATTERY_DATA, CAR_INFO_DATA, ODO_METER_DATA
-from .exception import (
+from .exceptions import (
     PolestarApiException,
     PolestarAuthException,
     PolestarNoDataException,
@@ -88,6 +88,10 @@ class PolestarApi:
     async def async_logout(self) -> None:
         """Log out from Polestar API."""
         await self.auth.async_logout()
+
+    def get_status_code(self) -> int | None:
+        """Return HTTP-like status code"""
+        return self.latest_call_code
 
     def get_available_vins(self) -> list[str]:
         """Get list of all available VINs"""

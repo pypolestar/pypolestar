@@ -16,7 +16,7 @@ from .const import (
     OIDC_SCOPE,
     TOKEN_REFRESH_WINDOW_MIN,
 )
-from .exception import PolestarAuthException
+from .exceptions import PolestarAuthException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +73,10 @@ class PolestarAuth:
 
         self.oidc_code_verifier = None
         self.oidc_state = None
+
+    def get_status_code(self) -> int | None:
+        """Return HTTP-like status code"""
+        return self.latest_call_code
 
     async def update_oidc_configuration(self) -> None:
         result = await self.client_session.get(
