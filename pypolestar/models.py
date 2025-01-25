@@ -94,6 +94,7 @@ class CarInformationData(CarBaseInformation):
     def torque_nm(self) -> int | None:
         if self.torque and (match := re.search(r"(\d+) Nm", self.torque)):
             return int(match.group(1))
+        return None
 
     @classmethod
     def from_dict(cls, data: GqlDict) -> Self:
