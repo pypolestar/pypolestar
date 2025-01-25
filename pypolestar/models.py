@@ -1,5 +1,6 @@
+import re
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from enum import StrEnum
 from typing import Self
 
@@ -38,6 +39,32 @@ class CarBaseInformation:
 
 
 @dataclass(frozen=True)
+class CarBatteryInformationData:
+    voltage: int | None
+    capacity: int | None
+    modules: int | None
+
+    @classmethod
+    def from_battery_str(cls, battery_information: str) -> Self:
+        if match := re.search(r"(\d+) kWh", battery_information):
+            capacity = int(match.group(1))
+        else:
+            capacity = None
+
+        if match := re.search(r"(\d+)V", battery_information):
+            voltage = int(match.group(1))
+        else:
+            voltage = None
+
+        if match := re.search(r"(\d+) modules", battery_information):
+            modules = int(match.group(1))
+        else:
+            modules = None
+
+        return cls(voltage=voltage, capacity=capacity, modules=modules)
+
+
+@dataclass(frozen=True)
 class CarInformationData(CarBaseInformation):
     vin: str | None
     internal_vehicle_identifier: str | None
@@ -50,6 +77,19 @@ class CarInformationData(CarBaseInformation):
     torque: str | None
     software_version: str | None
     software_version_timestamp: datetime | None
+
+    @property
+    def battery_information(self) -> CarBatteryInformationData | None:
+        return (
+            CarBatteryInformationData.from_battery_str(self.battery)
+            if self.battery
+            else None
+        )
+
+    @property
+    def torque_nm(self) -> int | None:
+        if self.torque and (match := re.search(r"(\d+) Nm", self.torque)):
+            return int(match.group(1))
 
     @classmethod
     def from_dict(cls, data: GqlDict) -> Self:
@@ -113,6 +153,27 @@ class CarBatteryData(CarBaseInformation):
     estimated_charging_time_to_full_minutes: int | None
     estimated_distance_to_empty_km: int | None
     event_updated_timestamp: datetime | None
+
+    @property
+    def estimated_full_charge_range_km(self) -> float | None:
+        if (
+            self.battery_charge_level_percentage is not None
+            and self.estimated_distance_to_empty_km is not None
+            and self.battery_charge_level_percentage > 0
+        ):
+            return round(
+                self.estimated_distance_to_empty_km
+                / self.battery_charge_level_percentage
+                * 100,
+                2,
+            )
+
+    @property
+    def estimated_fully_charged(self) -> datetime | None:
+        if self.estimated_charging_time_to_full_minutes:
+            return datetime.now(tz=timezone.utc).replace(
+                second=0, microsecond=0
+            ) + timedelta(minutes=self.estimated_charging_time_to_full_minutes)
 
     @classmethod
     def from_dict(cls, data: GqlDict) -> Self:
