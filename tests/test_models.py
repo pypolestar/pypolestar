@@ -1,11 +1,12 @@
 import json
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
 from pypolestar.models import (
     CarBatteryData,
+    CarBatteryInformationData,
     CarInformationData,
     CarOdometerData,
     ChargingConnectionStatus,
@@ -44,6 +45,37 @@ def test_car_information_data(polestar3_test_data):
     assert data.battery == "400V lithium-ion battery, 111 kWh capacity, 17 modules"
     assert data.torque == "840 Nm / 620 lbf-ft"
     assert data.software_version is None
+    assert data.battery_information == CarBatteryInformationData(
+        capacity=111, voltage=400, modules=17
+    )
+    assert data.torque_nm == 840
+
+
+def test_car_battery_information_data():
+    # Polestar3
+    assert CarBatteryInformationData.from_battery_str(
+        "400V lithium-ion battery, 111 kWh capacity, 17 modules"
+    ) == CarBatteryInformationData(voltage=400, capacity=111, modules=17)
+
+    # Polestar 2 Standard range Single motor
+    assert CarBatteryInformationData.from_battery_str(
+        "400V lithium-ion battery, 69 kWh capacity, 24 modules"
+    ) == CarBatteryInformationData(voltage=400, capacity=69, modules=24)
+
+    # Polestar 2 Long range Single motor
+    assert CarBatteryInformationData.from_battery_str(
+        "400V lithium-ion battery, 82 kWh capacity, 27 modules"
+    ) == CarBatteryInformationData(voltage=400, capacity=82, modules=27)
+
+    # Imaginary Polestar
+    assert CarBatteryInformationData.from_battery_str(
+        "800V lithium-ion battery, 111 kWh capacity, 17 modules"
+    ) == CarBatteryInformationData(voltage=800, capacity=111, modules=17)
+
+    # Imaginary Polestar
+    assert CarBatteryInformationData.from_battery_str(
+        "4xAAA"
+    ) == CarBatteryInformationData(voltage=None, capacity=None, modules=None)
 
 
 def test_car_information_data_invalid():
@@ -78,7 +110,30 @@ def test_car_battery_data(polestar3_test_data):
         second=13,
         tzinfo=timezone.utc,
     )
+    assert data.event_updated_timestamp is not None
     assert data.event_updated_timestamp.timestamp() == 1731347233
+
+
+def test_car_battery_data_rate():
+    data = CarBatteryData(
+        _received_timestamp=datetime.now(tz=timezone.utc),
+        average_energy_consumption_kwh_per_100km=None,
+        battery_charge_level_percentage=55,
+        charger_connection_status=ChargingConnectionStatus.CHARGER_CONNECTION_STATUS_DISCONNECTED,
+        charging_current_amps=0,
+        charging_power_watts=0,
+        charging_status=ChargingStatus.CHARGING_STATUS_IDLE,
+        estimated_charging_time_minutes_to_target_distance=None,
+        estimated_charging_time_to_full_minutes=60,
+        estimated_distance_to_empty_km=300,
+        event_updated_timestamp=None,
+    )
+
+    assert data.estimated_full_charge_range_km == 545.45
+
+    fully_charged_at = datetime.now(tz=timezone.utc) + timedelta(minutes=59)
+    assert data.estimated_fully_charged is not None
+    assert data.estimated_fully_charged > fully_charged_at
 
 
 def test_car_battery_data_invalid():
