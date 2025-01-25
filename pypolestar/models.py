@@ -44,19 +44,23 @@ class CarBatteryInformationData:
     capacity: int | None
     modules: int | None
 
+    _CAPACITY_PATTERN = re.compile(r"(\d+) kWh")
+    _VOLTAGE_PATTERN = re.compile(r"(\d+)V")
+    _MODULES_PATTERN = re.compile(r"(\d+) modules")
+
     @classmethod
     def from_battery_str(cls, battery_information: str) -> Self:
-        if match := re.search(r"(\d+) kWh", battery_information):
+        if match := cls._CAPACITY_PATTERN.search(battery_information):
             capacity = int(match.group(1))
         else:
             capacity = None
 
-        if match := re.search(r"(\d+)V", battery_information):
+        if match := cls._VOLTAGE_PATTERN.search(battery_information):
             voltage = int(match.group(1))
         else:
             voltage = None
 
-        if match := re.search(r"(\d+) modules", battery_information):
+        if match := cls._MODULES_PATTERN.search(battery_information):
             modules = int(match.group(1))
         else:
             modules = None
