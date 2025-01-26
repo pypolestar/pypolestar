@@ -252,3 +252,59 @@ class CarBatteryData(CarBaseInformation):
             ),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )
+
+
+@dataclass(frozen=True)
+class CarHealthData(CarBaseInformation):
+    # brakeFluidLevelWarning
+    days_to_service: int | None
+    distance_to_service_km: int | None
+    # engineCoolantLevelWarning
+    # oilLevelWarning
+    # serviceWarning
+    event_updated_timestamp: datetime | None
+
+    @classmethod
+    def from_dict(cls, data: GqlDict) -> Self:
+        if not isinstance(data, dict):
+            raise TypeError
+
+        return cls(
+            days_to_service=get_field_name_int("daysToService", data),
+            distance_to_service_km=get_field_name_int("distanceToServiceKm", data),
+            event_updated_timestamp=get_field_name_datetime(
+                "eventUpdatedTimestamp/iso", data
+            ),
+            _received_timestamp=datetime.now(tz=timezone.utc),
+        )
+
+
+@dataclass(frozen=True)
+class CarTelematicsData(CarBaseInformation):
+    health: CarHealthData | None
+    battery: CarBatteryData | None
+    odometer: CarOdometerData | None
+
+    @classmethod
+    def from_dict(cls, data: GqlDict) -> Self:
+        if not isinstance(data, dict):
+            raise TypeError
+
+        health = data.get("health")
+        battery = data.get("battery")
+        odometer = data.get("odometer")
+
+        return cls(
+            health=(
+                CarHealthData.from_dict(health) if isinstance(health, dict) else None
+            ),
+            battery=(
+                CarBatteryData.from_dict(battery) if isinstance(battery, dict) else None
+            ),
+            odometer=(
+                CarOdometerData.from_dict(odometer)
+                if isinstance(odometer, dict)
+                else None
+            ),
+            _received_timestamp=datetime.now(tz=timezone.utc),
+        )

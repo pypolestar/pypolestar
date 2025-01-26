@@ -7,8 +7,10 @@ import pytest
 from pypolestar.models import (
     CarBatteryData,
     CarBatteryInformationData,
+    CarHealthData,
     CarInformationData,
     CarOdometerData,
+    CarTelematicsData,
     ChargingConnectionStatus,
     ChargingStatus,
 )
@@ -159,3 +161,12 @@ def test_car_odometer_data_invalid():
         CarOdometerData.from_dict({})
     with pytest.raises(TypeError):
         CarOdometerData.from_dict(None)
+
+
+def test_telematics_information_data(polestar3_test_data):
+    data = CarTelematicsData.from_dict(polestar3_test_data["carTelematics"])
+    assert data is not None
+    assert isinstance(data, CarTelematicsData)
+    assert isinstance(data.health, CarHealthData) or data.health is None
+    assert isinstance(data.battery, CarBatteryData)
+    assert isinstance(data.odometer, CarOdometerData)
