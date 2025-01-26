@@ -7,6 +7,9 @@ license = "MIT"
 readme = "README.md"
 repository = "https://github.com/pypolestar/pypolestar"
 
+[tool.poetry.scripts]
+polestar = "pypolestar.cli:main"
+
 [tool.poetry.dependencies]
 python = "^3.11"
 httpx = ">=0.27.2"
