@@ -5,7 +5,7 @@ import logging
 from getpass import getpass
 
 from . import PolestarApi
-from .exceptions import PolestarApiException, PolestarAuthException
+from .exceptions import PolestarAuthException
 
 
 def dump_api_data(api: PolestarApi, vin: str) -> None:
