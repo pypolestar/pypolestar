@@ -58,24 +58,12 @@ class ServiceWarning(StrEnum):
     SERVICE_WARNING_NO_WARNING = "No Warning"
     SERVICE_WARNING_UNSPECIFIED = "Unspecified"
     SERVICE_WARNING_SERVICE_REQUIRED = "Service Required"
-    SERVICE_WARNING_REGULAR_MAINTENANCE_ALMOST_TIME_FOR_SERVICE = (
-        "Regular Maintenance Almost Time For Service"
-    )
-    SERVICE_WARNING_DISTANCE_DRIVEN_ALMOST_TIME_FOR_SERVICE = (
-        "Distance Driven Almost Time For Service"
-    )
-    SERVICE_WARNING_REGULAR_MAINTENANCE_TIME_FOR_SERVICE = (
-        "Regular Maintenance Time For Service"
-    )
-    SERVICE_WARNING_DISTANCE_DRIVEN_TIME_FOR_SERVICE = (
-        "Distance Driven Time For Service"
-    )
-    SERVICE_WARNING_REGULAR_MAINTENANCE_OVERDUE_FOR_SERVICE = (
-        "Regular Maintenance Overdue For Service"
-    )
-    SERVICE_WARNING_DISTANCE_DRIVEN_OVERDUE_FOR_SERVICE = (
-        "Distance Driven Overdue For Service"
-    )
+    SERVICE_WARNING_REGULAR_MAINTENANCE_ALMOST_TIME_FOR_SERVICE = "Regular Maintenance Almost Time For Service"
+    SERVICE_WARNING_DISTANCE_DRIVEN_ALMOST_TIME_FOR_SERVICE = "Distance Driven Almost Time For Service"
+    SERVICE_WARNING_REGULAR_MAINTENANCE_TIME_FOR_SERVICE = "Regular Maintenance Time For Service"
+    SERVICE_WARNING_DISTANCE_DRIVEN_TIME_FOR_SERVICE = "Distance Driven Time For Service"
+    SERVICE_WARNING_REGULAR_MAINTENANCE_OVERDUE_FOR_SERVICE = "Regular Maintenance Overdue For Service"
+    SERVICE_WARNING_DISTANCE_DRIVEN_OVERDUE_FOR_SERVICE = "Distance Driven Overdue For Service"
 
 
 @dataclass(frozen=True)
@@ -136,11 +124,7 @@ class CarInformationData(CarBaseInformation):
 
     @cached_property
     def battery_information(self) -> CarBatteryInformationData | None:
-        return (
-            CarBatteryInformationData.from_battery_str(self.battery)
-            if self.battery
-            else None
-        )
+        return CarBatteryInformationData.from_battery_str(self.battery) if self.battery else None
 
     @cached_property
     def torque_nm(self) -> int | None:
@@ -155,9 +139,7 @@ class CarInformationData(CarBaseInformation):
 
         return cls(
             vin=get_field_name_str("vin", data),
-            internal_vehicle_identifier=get_field_name_str(
-                "internalVehicleIdentifier", data
-            ),
+            internal_vehicle_identifier=get_field_name_str("internalVehicleIdentifier", data),
             registration_no=get_field_name_str("registrationNo", data),
             registration_date=get_field_name_date("registrationDate", data),
             factory_complete_date=get_field_name_date("factoryCompleteDate", data),
@@ -166,9 +148,7 @@ class CarInformationData(CarBaseInformation):
             battery=get_field_name_str("content/specification/battery", data),
             torque=get_field_name_str("content/specification/torque", data),
             software_version=get_field_name_str("software/version", data),
-            software_version_timestamp=get_field_name_datetime(
-                "software/versionTimestamp", data
-            ),
+            software_version_timestamp=get_field_name_datetime("software/versionTimestamp", data),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )
 
@@ -191,9 +171,7 @@ class CarOdometerData(CarBaseInformation):
             odometer_meters=get_field_name_int("odometerMeters", data),
             trip_meter_automatic_km=get_field_name_float("tripMeterAutomaticKm", data),
             trip_meter_manual_km=get_field_name_float("tripMeterManualKm", data),
-            event_updated_timestamp=get_field_name_datetime(
-                "eventUpdatedTimestamp/iso", data
-            ),
+            event_updated_timestamp=get_field_name_datetime("eventUpdatedTimestamp/iso", data),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )
 
@@ -226,9 +204,7 @@ class CarBatteryData(CarBaseInformation):
             and self.estimated_distance_to_empty_km >= 0
         ):
             return round(
-                self.estimated_distance_to_empty_km
-                / self.battery_charge_level_percentage
-                * 100,
+                self.estimated_distance_to_empty_km / self.battery_charge_level_percentage * 100,
                 2,
             )
 
@@ -247,9 +223,9 @@ class CarBatteryData(CarBaseInformation):
             and self.battery_charge_level_percentage is not None
             and self.battery_charge_level_percentage < 100
         ):
-            return datetime.now(tz=timezone.utc).replace(
-                second=0, microsecond=0
-            ) + timedelta(minutes=self.estimated_charging_time_to_full_minutes)
+            return datetime.now(tz=timezone.utc).replace(second=0, microsecond=0) + timedelta(
+                minutes=self.estimated_charging_time_to_full_minutes
+            )
         return None
 
     @classmethod
@@ -258,13 +234,9 @@ class CarBatteryData(CarBaseInformation):
             raise TypeError
 
         try:
-            charger_connection_status = ChargingConnectionStatus[
-                get_field_name_str("chargerConnectionStatus", data)
-            ]
+            charger_connection_status = ChargingConnectionStatus[get_field_name_str("chargerConnectionStatus", data)]
         except KeyError:
-            charger_connection_status = (
-                ChargingConnectionStatus.CHARGER_CONNECTION_STATUS_UNSPECIFIED
-            )
+            charger_connection_status = ChargingConnectionStatus.CHARGER_CONNECTION_STATUS_UNSPECIFIED
 
         try:
             charging_status = ChargingStatus[get_field_name_str("chargingStatus", data)]
@@ -272,12 +244,8 @@ class CarBatteryData(CarBaseInformation):
             charging_status = ChargingStatus.CHARGING_STATUS_UNSPECIFIED
 
         return cls(
-            average_energy_consumption_kwh_per_100km=get_field_name_float(
-                "averageEnergyConsumptionKwhPer100Km", data
-            ),
-            battery_charge_level_percentage=get_field_name_int(
-                "batteryChargeLevelPercentage", data
-            ),
+            average_energy_consumption_kwh_per_100km=get_field_name_float("averageEnergyConsumptionKwhPer100Km", data),
+            battery_charge_level_percentage=get_field_name_int("batteryChargeLevelPercentage", data),
             charger_connection_status=charger_connection_status,
             charging_current_amps=get_field_name_int("chargingCurrentAmps", data) or 0,
             charging_power_watts=get_field_name_int("chargingPowerWatts", data) or 0,
@@ -285,15 +253,9 @@ class CarBatteryData(CarBaseInformation):
             estimated_charging_time_minutes_to_target_distance=get_field_name_int(
                 "estimatedChargingTimeMinutesToTargetDistance", data
             ),
-            estimated_charging_time_to_full_minutes=get_field_name_int(
-                "estimatedChargingTimeToFullMinutes", data
-            ),
-            estimated_distance_to_empty_km=get_field_name_int(
-                "estimatedDistanceToEmptyKm", data
-            ),
-            event_updated_timestamp=get_field_name_datetime(
-                "eventUpdatedTimestamp/iso", data
-            ),
+            estimated_charging_time_to_full_minutes=get_field_name_int("estimatedChargingTimeToFullMinutes", data),
+            estimated_distance_to_empty_km=get_field_name_int("estimatedDistanceToEmptyKm", data),
+            event_updated_timestamp=get_field_name_datetime("eventUpdatedTimestamp/iso", data),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )
 
@@ -314,9 +276,7 @@ class CarHealthData(CarBaseInformation):
             raise TypeError
 
         try:
-            brake_fluid_level_warning = BrakeFluidLevelWarning[
-                get_field_name_str("brakeFluidLevelWarning", data) or ""
-            ]
+            brake_fluid_level_warning = BrakeFluidLevelWarning[get_field_name_str("brakeFluidLevelWarning", data) or ""]
         except KeyError:
             brake_fluid_level_warning = None
 
@@ -328,16 +288,12 @@ class CarHealthData(CarBaseInformation):
             engine_coolant_level_warning = None
 
         try:
-            oil_level_warning = OilLevelWarning[
-                get_field_name_str("oilLevelWarning", data) or ""
-            ]
+            oil_level_warning = OilLevelWarning[get_field_name_str("oilLevelWarning", data) or ""]
         except KeyError:
             oil_level_warning = None
 
         try:
-            service_warning = ServiceWarning[
-                get_field_name_str("serviceWarning", data) or ""
-            ]
+            service_warning = ServiceWarning[get_field_name_str("serviceWarning", data) or ""]
         except KeyError:
             service_warning = None
 
@@ -348,9 +304,7 @@ class CarHealthData(CarBaseInformation):
             engine_coolant_level_warning=engine_coolant_level_warning,
             oil_level_warning=oil_level_warning,
             service_warning=service_warning,
-            event_updated_timestamp=get_field_name_datetime(
-                "eventUpdatedTimestamp/iso", data
-            ),
+            event_updated_timestamp=get_field_name_datetime("eventUpdatedTimestamp/iso", data),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )
 
@@ -371,16 +325,8 @@ class CarTelematicsData(CarBaseInformation):
         odometer = data.get("odometer")
 
         return cls(
-            health=(
-                CarHealthData.from_dict(health) if isinstance(health, dict) else None
-            ),
-            battery=(
-                CarBatteryData.from_dict(battery) if isinstance(battery, dict) else None
-            ),
-            odometer=(
-                CarOdometerData.from_dict(odometer)
-                if isinstance(odometer, dict)
-                else None
-            ),
+            health=(CarHealthData.from_dict(health) if isinstance(health, dict) else None),
+            battery=(CarBatteryData.from_dict(battery) if isinstance(battery, dict) else None),
+            odometer=(CarOdometerData.from_dict(odometer) if isinstance(odometer, dict) else None),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )

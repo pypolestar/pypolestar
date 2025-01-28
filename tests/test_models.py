@@ -62,9 +62,7 @@ def test_car_information_data_polestar3(polestar3_test_data):
     assert data.battery == "400V lithium-ion battery, 111 kWh capacity, 17 modules"
     assert data.torque == "840 Nm / 620 lbf-ft"
     assert data.software_version is None
-    assert data.battery_information == CarBatteryInformationData(
-        capacity=111, voltage=400, modules=17
-    )
+    assert data.battery_information == CarBatteryInformationData(capacity=111, voltage=400, modules=17)
     assert data.torque_nm == 840
 
 
@@ -90,9 +88,9 @@ def test_car_battery_information_data():
     ) == CarBatteryInformationData(voltage=800, capacity=111, modules=17)
 
     # Imaginary Polestar
-    assert CarBatteryInformationData.from_battery_str(
-        "4xAAA"
-    ) == CarBatteryInformationData(voltage=None, capacity=None, modules=None)
+    assert CarBatteryInformationData.from_battery_str("4xAAA") == CarBatteryInformationData(
+        voltage=None, capacity=None, modules=None
+    )
 
 
 def test_car_information_data_invalid():
@@ -108,10 +106,7 @@ def test_car_battery_data_polestar3(polestar3_test_data):
     assert isinstance(data, CarBatteryData)
     assert data.average_energy_consumption_kwh_per_100km == 22.4
     assert data.battery_charge_level_percentage == 34
-    assert (
-        data.charger_connection_status
-        == ChargingConnectionStatus.CHARGER_CONNECTION_STATUS_DISCONNECTED
-    )
+    assert data.charger_connection_status == ChargingConnectionStatus.CHARGER_CONNECTION_STATUS_DISCONNECTED
     assert data.charging_current_amps == 0
     assert data.charging_power_watts == 0
     assert data.charging_status == ChargingStatus.CHARGING_STATUS_IDLE
@@ -196,14 +191,8 @@ def test_telematics_information_data_polestar2(polestar2_test_data):
     assert isinstance(data.health, CarHealthData)
     assert data.health.days_to_service == 196
     assert data.health.distance_to_service_km == 5227
-    assert (
-        data.health.engine_coolant_level_warning
-        == EngineCoolantLevelWarning.ENGINE_COOLANT_LEVEL_WARNING_NO_WARNING
-    )
-    assert (
-        data.health.brake_fluid_level_warning
-        == BrakeFluidLevelWarning.BRAKE_FLUID_LEVEL_WARNING_NO_WARNING
-    )
+    assert data.health.engine_coolant_level_warning == EngineCoolantLevelWarning.ENGINE_COOLANT_LEVEL_WARNING_NO_WARNING
+    assert data.health.brake_fluid_level_warning == BrakeFluidLevelWarning.BRAKE_FLUID_LEVEL_WARNING_NO_WARNING
     assert data.health.oil_level_warning == OilLevelWarning.OIL_LEVEL_WARNING_NO_WARNING
     assert data.health.service_warning == ServiceWarning.SERVICE_WARNING_NO_WARNING
 
