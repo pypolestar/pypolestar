@@ -80,9 +80,7 @@ class PolestarApi:
             self.available_vins.add(vin)
             self.logger.debug("API setup for VIN %s", vin)
 
-        if self.configured_vins and (
-            missing_vins := self.configured_vins - self.available_vins
-        ):
+        if self.configured_vins and (missing_vins := self.configured_vins - self.available_vins):
             self.logger.warning("Could not found configured VINs %s", missing_vins)
 
     async def async_logout(self) -> None:
@@ -212,11 +210,7 @@ class PolestarApi:
         """Get the latest vehicle data from the Polestar API."""
 
         result = await self._query_graph_ql(
-            query=(
-                QUERY_GET_CONSUMER_CARS_V2_VERBOSE
-                if verbose
-                else QUERY_GET_CONSUMER_CARS_V2
-            ),
+            query=(QUERY_GET_CONSUMER_CARS_V2_VERBOSE if verbose else QUERY_GET_CONSUMER_CARS_V2),
             variable_values={"locale": "en_GB"},
         )
 
@@ -251,16 +245,11 @@ class PolestarApi:
                 query,
                 operation_name=operation_name,
                 variable_values=variable_values,
-                extra_args={
-                    "headers": {"Authorization": f"Bearer {self.auth.access_token}"}
-                },
+                extra_args={"headers": {"Authorization": f"Bearer {self.auth.access_token}"}},
             )
         except TransportQueryError as exc:
             self.logger.debug("GraphQL TransportQueryError: %s", str(exc))
-            if (
-                exc.errors
-                and exc.errors[0].get("extensions", {}).get("code") == "UNAUTHENTICATED"
-            ):
+            if exc.errors and exc.errors[0].get("extensions", {}).get("code") == "UNAUTHENTICATED":
                 self.latest_call_code = 401
                 raise PolestarNotAuthorizedException(exc.errors[0]["message"]) from exc
             self.latest_call_code = 500

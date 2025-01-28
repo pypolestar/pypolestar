@@ -33,9 +33,7 @@ def get_field_name_value(field_name: str, data: GqlDict) -> GqlScalar | GqlDict:
                 raise KeyError(f"Key '{key}' not found in path '{field_name}'")
             result = result[key]
         else:
-            raise KeyError(
-                f"Cannot access key '{key}' in non-dict value at path '{field_name}'"
-            )
+            raise KeyError(f"Cannot access key '{key}' in non-dict value at path '{field_name}'")
 
     return result
 
@@ -83,9 +81,7 @@ def get_field_name_int(field_name: str, data: GqlDict) -> int | None:
         try:
             return int(value)
         except (ValueError, TypeError) as exc:
-            raise ValueError(
-                f"Invalid integer value at '{field_name}': {value}"
-            ) from exc
+            raise ValueError(f"Invalid integer value at '{field_name}': {value}") from exc
 
 
 def get_field_name_date(field_name: str, data: GqlDict) -> date | None:
@@ -103,9 +99,7 @@ def get_field_name_date(field_name: str, data: GqlDict) -> date | None:
             try:
                 return date.fromisoformat(value)
             except ValueError as exc:
-                raise ValueError(
-                    f"Invalid date format at '{field_name}': {value}"
-                ) from exc
+                raise ValueError(f"Invalid date format at '{field_name}': {value}") from exc
 
 
 def get_field_name_datetime(field_name: str, data: GqlDict) -> datetime | None:
@@ -123,6 +117,4 @@ def get_field_name_datetime(field_name: str, data: GqlDict) -> datetime | None:
             try:
                 return datetime.fromisoformat(value)
             except ValueError as exc:
-                raise ValueError(
-                    f"Invalid datetime format at '{field_name}': {value}"
-                ) from exc
+                raise ValueError(f"Invalid datetime format at '{field_name}': {value}") from exc

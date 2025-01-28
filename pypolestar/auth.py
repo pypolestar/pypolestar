@@ -82,9 +82,7 @@ class PolestarAuth:
         return self.latest_call_code
 
     async def update_oidc_configuration(self) -> None:
-        result = await self.client_session.get(
-            urljoin(OIDC_PROVIDER_BASE_URL, "/.well-known/openid-configuration")
-        )
+        result = await self.client_session.get(urljoin(OIDC_PROVIDER_BASE_URL, "/.well-known/openid-configuration"))
         result.raise_for_status()
         self.oidc_configuration = result.json()
 
@@ -95,9 +93,7 @@ class PolestarAuth:
         refresh_window = min([(self.token_lifetime or 0) / 2, TOKEN_REFRESH_WINDOW_MIN])
         expires_in = (self.token_expiry - datetime.now(tz=timezone.utc)).total_seconds()
         if expires_in < refresh_window:
-            self.logger.debug(
-                "Token expires in %d seconds, time to refresh", expires_in
-            )
+            self.logger.debug("Token expires in %d seconds, time to refresh", expires_in)
             return True
         return False
 
@@ -130,9 +126,7 @@ class PolestarAuth:
                     self.logger.debug("Token refreshed")
                     return
                 except Exception as exc:
-                    self.logger.warning(
-                        "Failed to refresh token, retry with code", exc_info=exc
-                    )
+                    self.logger.warning("Failed to refresh token, retry with code", exc_info=exc)
 
             try:
                 await self._authorization_code()
@@ -156,9 +150,7 @@ class PolestarAuth:
             self.access_token = payload["access_token"]
             self.refresh_token = payload["refresh_token"]
             self.token_lifetime = payload["expires_in"]
-            self.token_expiry = datetime.now(tz=timezone.utc) + timedelta(
-                seconds=self.token_lifetime
-            )
+            self.token_expiry = datetime.now(tz=timezone.utc) + timedelta(seconds=self.token_lifetime)
         except KeyError as exc:
             self.logger.error("Token response missing key: %s", exc)
             raise PolestarAuthException("Token response missing key") from exc
@@ -176,16 +168,10 @@ class PolestarAuth:
             "client_id": OIDC_CLIENT_ID,
             "code": code,
             "redirect_uri": OIDC_REDIRECT_URI,
-            **(
-                {"code_verifier": self.oidc_code_verifier}
-                if self.oidc_code_verifier
-                else {}
-            ),
+            **({"code_verifier": self.oidc_code_verifier} if self.oidc_code_verifier else {}),
         }
 
-        self.logger.debug(
-            "Call token endpoint with grant_type=%s", token_request["grant_type"]
-        )
+        self.logger.debug("Call token endpoint with grant_type=%s", token_request["grant_type"])
 
         response = await self.client_session.post(
             self.oidc_configuration["token_endpoint"],
@@ -204,9 +190,7 @@ class PolestarAuth:
             "refresh_token": self.refresh_token,
         }
 
-        self.logger.debug(
-            "Call token endpoint with grant_type=%s", token_request["grant_type"]
-        )
+        self.logger.debug("Call token endpoint with grant_type=%s", token_request["grant_type"])
 
         response = await self.client_session.post(
             self.oidc_configuration["token_endpoint"],
@@ -249,9 +233,7 @@ class PolestarAuth:
 
         # handle missing code (e.g., accepting terms and conditions)
         if code is None and uid:
-            self.logger.debug(
-                "Code missing; submit confirmation for uid=%s and retry", uid
-            )
+            self.logger.debug("Code missing; submit confirmation for uid=%s and retry", uid)
             params = {"client_id": OIDC_CLIENT_ID}
             data = {"pf.submit": True, "subject": uid}
             result = await self.client_session.post(
@@ -266,16 +248,12 @@ class PolestarAuth:
             code = result.next_request.url.params.get("code")
 
         # sign-in-callback
-        result = await self.client_session.get(
-            result.next_request.url, timeout=HTTPX_TIMEOUT
-        )
+        result = await self.client_session.get(result.next_request.url, timeout=HTTPX_TIMEOUT)
         self.latest_call_code = result.status_code
 
         if result.status_code != 200:
             self.logger.error("Auth Code Error: %s", result)
-            raise PolestarAuthException(
-                "Error getting code callback", result.status_code
-            )
+            raise PolestarAuthException("Error getting code callback", result.status_code)
 
         result = await self.client_session.get(url)
 

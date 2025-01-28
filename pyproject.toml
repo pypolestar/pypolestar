@@ -17,7 +17,7 @@ gql = {version = "^3.5.0", extras = ["httpx"]}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
-ruff = "^0.8.4"
+ruff = "^0.9.3"
 pytest-ruff = "^0.4.1"
 
 [build-system]
@@ -25,7 +25,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-line-length = 88
+line-length = 120
 required-version = ">=0.6.8"
 
 [tool.ruff.lint]
@@ -43,7 +43,7 @@ select = [
     # isort
     "I",
 ]
-ignore = ["E501"]
+ignore = ["E501","SIM108"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
