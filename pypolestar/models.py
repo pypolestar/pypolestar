@@ -34,6 +34,50 @@ class ChargingStatus(StrEnum):
     CHARGING_STATUS_SMART_CHARGING = "Smart Charging"
 
 
+class BrakeFluidLevelWarning(StrEnum):
+    BRAKE_FLUID_LEVEL_WARNING_NO_WARNING = "No Warning"
+    BRAKE_FLUID_LEVEL_WARNING_UNSPECIFIED = "Unspecified"
+    BRAKE_FLUID_LEVEL_WARNING_TOO_LOW = "Too Low"
+
+
+class EngineCoolantLevelWarning(StrEnum):
+    ENGINE_COOLANT_LEVEL_WARNING_NO_WARNING = "No Warning"
+    ENGINE_COOLANT_LEVEL_WARNING_UNSPECIFIED = "Unspecified"
+    ENGINE_COOLANT_LEVEL_WARNING_TOO_LOW = "Too Low"
+
+
+class OilLevelWarning(StrEnum):
+    OIL_LEVEL_WARNING_NO_WARNING = "No Warning"
+    OIL_LEVEL_WARNING_UNSPECIFIED = "Unspecified"
+    OIL_LEVEL_WARNING_TOO_LOW = "Too Low"
+    OIL_LEVEL_WARNING_TOO_HIGH = "Too High"
+    OIL_LEVEL_WARNING_SERVICE_REQUIRED = "Service Required"
+
+
+class ServiceWarning(StrEnum):
+    SERVICE_WARNING_NO_WARNING = "No Warning"
+    SERVICE_WARNING_UNSPECIFIED = "Unspecified"
+    SERVICE_WARNING_SERVICE_REQUIRED = "Service Required"
+    SERVICE_WARNING_REGULAR_MAINTENANCE_ALMOST_TIME_FOR_SERVICE = (
+        "Regular Maintenance Almost Time For Service"
+    )
+    SERVICE_WARNING_DISTANCE_DRIVEN_ALMOST_TIME_FOR_SERVICE = (
+        "Distance Driven Almost Time For Service"
+    )
+    SERVICE_WARNING_REGULAR_MAINTENANCE_TIME_FOR_SERVICE = (
+        "Regular Maintenance Time For Service"
+    )
+    SERVICE_WARNING_DISTANCE_DRIVEN_TIME_FOR_SERVICE = (
+        "Distance Driven Time For Service"
+    )
+    SERVICE_WARNING_REGULAR_MAINTENANCE_OVERDUE_FOR_SERVICE = (
+        "Regular Maintenance Overdue For Service"
+    )
+    SERVICE_WARNING_DISTANCE_DRIVEN_OVERDUE_FOR_SERVICE = (
+        "Distance Driven Overdue For Service"
+    )
+
+
 @dataclass(frozen=True)
 class CarBaseInformation:
     _received_timestamp: datetime
@@ -256,12 +300,12 @@ class CarBatteryData(CarBaseInformation):
 
 @dataclass(frozen=True)
 class CarHealthData(CarBaseInformation):
-    # brakeFluidLevelWarning
+    brake_fluid_level_warning: BrakeFluidLevelWarning | None
     days_to_service: int | None
     distance_to_service_km: int | None
-    # engineCoolantLevelWarning
-    # oilLevelWarning
-    # serviceWarning
+    engine_coolant_level_warning: EngineCoolantLevelWarning | None
+    oil_level_warning: OilLevelWarning | None
+    service_warning: ServiceWarning | None
     event_updated_timestamp: datetime | None
 
     @classmethod
@@ -269,9 +313,41 @@ class CarHealthData(CarBaseInformation):
         if not isinstance(data, dict):
             raise TypeError
 
+        try:
+            brake_fluid_level_warning = BrakeFluidLevelWarning[
+                get_field_name_str("brakeFluidLevelWarning", data) or ""
+            ]
+        except KeyError:
+            brake_fluid_level_warning = None
+
+        try:
+            engine_coolant_level_warning = EngineCoolantLevelWarning[
+                get_field_name_str("engineCoolantLevelWarning", data) or ""
+            ]
+        except KeyError:
+            engine_coolant_level_warning = None
+
+        try:
+            oil_level_warning = OilLevelWarning[
+                get_field_name_str("oilLevelWarning", data) or ""
+            ]
+        except KeyError:
+            oil_level_warning = None
+
+        try:
+            service_warning = ServiceWarning[
+                get_field_name_str("serviceWarning", data) or ""
+            ]
+        except KeyError:
+            service_warning = None
+
         return cls(
+            brake_fluid_level_warning=brake_fluid_level_warning,
             days_to_service=get_field_name_int("daysToService", data),
             distance_to_service_km=get_field_name_int("distanceToServiceKm", data),
+            engine_coolant_level_warning=engine_coolant_level_warning,
+            oil_level_warning=oil_level_warning,
+            service_warning=service_warning,
             event_updated_timestamp=get_field_name_datetime(
                 "eventUpdatedTimestamp/iso", data
             ),

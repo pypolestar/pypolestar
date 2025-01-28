@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from pypolestar.models import (
+    BrakeFluidLevelWarning,
     CarBatteryData,
     CarBatteryInformationData,
     CarHealthData,
@@ -13,6 +14,9 @@ from pypolestar.models import (
     CarTelematicsData,
     ChargingConnectionStatus,
     ChargingStatus,
+    EngineCoolantLevelWarning,
+    OilLevelWarning,
+    ServiceWarning,
 )
 
 DATADIR = Path(__file__).parent.resolve() / "data"
@@ -23,13 +27,24 @@ def polestar3_test_data():
     try:
         with open(DATADIR / "polestar3.json") as fp:
             return json.load(fp)
-    except FileNotFoundError as e:
-        pytest.skip(f"Test data file not found: {e.filename}")
-    except json.JSONDecodeError as e:
-        pytest.skip(f"Invalid JSON in test data file: {e}")
+    except FileNotFoundError as exc:
+        pytest.skip(f"Test data file not found: {exc.filename}")
+    except json.JSONDecodeError as exc:
+        pytest.skip(f"Invalid JSON in test data file: {exc}")
 
 
-def test_car_information_data(polestar3_test_data):
+@pytest.fixture
+def polestar2_test_data():
+    try:
+        with open(DATADIR / "polestar2.json") as fp:
+            return json.load(fp)
+    except FileNotFoundError as exc:
+        pytest.skip(f"Test data file not found: {exc.filename}")
+    except json.JSONDecodeError as exc:
+        pytest.skip(f"Invalid JSON in test data file: {exc}")
+
+
+def test_car_information_data_polestar3(polestar3_test_data):
     data = CarInformationData.from_dict(polestar3_test_data["getConsumerCarsV2"])
     # Verify expected attributes
     assert data is not None
@@ -87,7 +102,7 @@ def test_car_information_data_invalid():
         CarInformationData.from_dict(None)  # Test with None
 
 
-def test_car_battery_data(polestar3_test_data):
+def test_car_battery_data_polestar3(polestar3_test_data):
     data = CarBatteryData.from_dict(polestar3_test_data["getBatteryData"])
     assert data is not None
     assert isinstance(data, CarBatteryData)
@@ -145,7 +160,7 @@ def test_car_battery_data_invalid():
         CarBatteryData.from_dict(None)
 
 
-def test_car_odometer_data(polestar3_test_data):
+def test_car_odometer_data_polestar3(polestar3_test_data):
     data = CarOdometerData.from_dict(polestar3_test_data["getOdometerData"])
     assert data is not None
     assert isinstance(data, CarOdometerData)
@@ -163,10 +178,34 @@ def test_car_odometer_data_invalid():
         CarOdometerData.from_dict(None)
 
 
-def test_telematics_information_data(polestar3_test_data):
+def test_telematics_information_data_polestar3(polestar3_test_data):
     data = CarTelematicsData.from_dict(polestar3_test_data["carTelematics"])
     assert data is not None
     assert isinstance(data, CarTelematicsData)
     assert isinstance(data.health, CarHealthData) or data.health is None
+    assert isinstance(data.battery, CarBatteryData)
+    assert isinstance(data.odometer, CarOdometerData)
+
+
+def test_telematics_information_data_polestar2(polestar2_test_data):
+    data = CarTelematicsData.from_dict(polestar2_test_data["carTelematics"])
+
+    assert data is not None
+    assert isinstance(data, CarTelematicsData)
+
+    assert isinstance(data.health, CarHealthData)
+    assert data.health.days_to_service == 196
+    assert data.health.distance_to_service_km == 5227
+    assert (
+        data.health.engine_coolant_level_warning
+        == EngineCoolantLevelWarning.ENGINE_COOLANT_LEVEL_WARNING_NO_WARNING
+    )
+    assert (
+        data.health.brake_fluid_level_warning
+        == BrakeFluidLevelWarning.BRAKE_FLUID_LEVEL_WARNING_NO_WARNING
+    )
+    assert data.health.oil_level_warning == OilLevelWarning.OIL_LEVEL_WARNING_NO_WARNING
+    assert data.health.service_warning == ServiceWarning.SERVICE_WARNING_NO_WARNING
+
     assert isinstance(data.battery, CarBatteryData)
     assert isinstance(data.odometer, CarOdometerData)
