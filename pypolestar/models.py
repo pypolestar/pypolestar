@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from enum import StrEnum
 from functools import cached_property
-from typing import Self
+from typing import Any, Self
 
 from .utils import (
     GqlDict,
@@ -15,14 +15,23 @@ from .utils import (
 )
 
 
-class ChargingConnectionStatus(StrEnum):
+class StrEnumOptional(StrEnum):
+    @classmethod
+    def get(cls, key: Any, default: Self) -> Self:
+        try:
+            return cls[key]
+        except KeyError:
+            return default
+
+
+class ChargingConnectionStatus(StrEnumOptional):
     CHARGER_CONNECTION_STATUS_CONNECTED = "Connected"
     CHARGER_CONNECTION_STATUS_DISCONNECTED = "Disconnected"
     CHARGER_CONNECTION_STATUS_FAULT = "Fault"
     CHARGER_CONNECTION_STATUS_UNSPECIFIED = "Unspecified"
 
 
-class ChargingStatus(StrEnum):
+class ChargingStatus(StrEnumOptional):
     CHARGING_STATUS_DONE = "Done"
     CHARGING_STATUS_IDLE = "Idle"
     CHARGING_STATUS_CHARGING = "Charging"
@@ -34,19 +43,19 @@ class ChargingStatus(StrEnum):
     CHARGING_STATUS_SMART_CHARGING = "Smart Charging"
 
 
-class BrakeFluidLevelWarning(StrEnum):
+class BrakeFluidLevelWarning(StrEnumOptional):
     BRAKE_FLUID_LEVEL_WARNING_NO_WARNING = "No Warning"
     BRAKE_FLUID_LEVEL_WARNING_UNSPECIFIED = "Unspecified"
     BRAKE_FLUID_LEVEL_WARNING_TOO_LOW = "Too Low"
 
 
-class EngineCoolantLevelWarning(StrEnum):
+class EngineCoolantLevelWarning(StrEnumOptional):
     ENGINE_COOLANT_LEVEL_WARNING_NO_WARNING = "No Warning"
     ENGINE_COOLANT_LEVEL_WARNING_UNSPECIFIED = "Unspecified"
     ENGINE_COOLANT_LEVEL_WARNING_TOO_LOW = "Too Low"
 
 
-class OilLevelWarning(StrEnum):
+class OilLevelWarning(StrEnumOptional):
     OIL_LEVEL_WARNING_NO_WARNING = "No Warning"
     OIL_LEVEL_WARNING_UNSPECIFIED = "Unspecified"
     OIL_LEVEL_WARNING_TOO_LOW = "Too Low"
@@ -54,7 +63,7 @@ class OilLevelWarning(StrEnum):
     OIL_LEVEL_WARNING_SERVICE_REQUIRED = "Service Required"
 
 
-class ServiceWarning(StrEnum):
+class ServiceWarning(StrEnumOptional):
     SERVICE_WARNING_NO_WARNING = "No Warning"
     SERVICE_WARNING_UNSPECIFIED = "Unspecified"
     SERVICE_WARNING_SERVICE_REQUIRED = "Service Required"
@@ -233,15 +242,15 @@ class CarBatteryData(CarBaseInformation):
         if not isinstance(data, dict):
             raise TypeError
 
-        try:
-            charger_connection_status = ChargingConnectionStatus[get_field_name_str("chargerConnectionStatus", data)]
-        except KeyError:
-            charger_connection_status = ChargingConnectionStatus.CHARGER_CONNECTION_STATUS_UNSPECIFIED
+        charger_connection_status = ChargingConnectionStatus.get(
+            data["chargerConnectionStatus"],
+            ChargingConnectionStatus.CHARGER_CONNECTION_STATUS_UNSPECIFIED,
+        )
 
-        try:
-            charging_status = ChargingStatus[get_field_name_str("chargingStatus", data)]
-        except KeyError:
-            charging_status = ChargingStatus.CHARGING_STATUS_UNSPECIFIED
+        charging_status = ChargingStatus.get(
+            data["chargingStatus"],
+            ChargingStatus.CHARGING_STATUS_UNSPECIFIED,
+        )
 
         return cls(
             average_energy_consumption_kwh_per_100km=get_field_name_float("averageEnergyConsumptionKwhPer100Km", data),
@@ -262,12 +271,12 @@ class CarBatteryData(CarBaseInformation):
 
 @dataclass(frozen=True)
 class CarHealthData(CarBaseInformation):
-    brake_fluid_level_warning: BrakeFluidLevelWarning | None
+    brake_fluid_level_warning: BrakeFluidLevelWarning
     days_to_service: int | None
     distance_to_service_km: int | None
-    engine_coolant_level_warning: EngineCoolantLevelWarning | None
-    oil_level_warning: OilLevelWarning | None
-    service_warning: ServiceWarning | None
+    engine_coolant_level_warning: EngineCoolantLevelWarning
+    oil_level_warning: OilLevelWarning
+    service_warning: ServiceWarning
     event_updated_timestamp: datetime | None
 
     @classmethod
@@ -275,27 +284,22 @@ class CarHealthData(CarBaseInformation):
         if not isinstance(data, dict):
             raise TypeError
 
-        try:
-            brake_fluid_level_warning = BrakeFluidLevelWarning[get_field_name_str("brakeFluidLevelWarning", data) or ""]
-        except KeyError:
-            brake_fluid_level_warning = None
-
-        try:
-            engine_coolant_level_warning = EngineCoolantLevelWarning[
-                get_field_name_str("engineCoolantLevelWarning", data) or ""
-            ]
-        except KeyError:
-            engine_coolant_level_warning = None
-
-        try:
-            oil_level_warning = OilLevelWarning[get_field_name_str("oilLevelWarning", data) or ""]
-        except KeyError:
-            oil_level_warning = None
-
-        try:
-            service_warning = ServiceWarning[get_field_name_str("serviceWarning", data) or ""]
-        except KeyError:
-            service_warning = None
+        brake_fluid_level_warning = BrakeFluidLevelWarning.get(
+            data["brakeFluidLevelWarning"],
+            BrakeFluidLevelWarning.BRAKE_FLUID_LEVEL_WARNING_UNSPECIFIED,
+        )
+        engine_coolant_level_warning = EngineCoolantLevelWarning.get(
+            data["engineCoolantLevelWarning"],
+            EngineCoolantLevelWarning.ENGINE_COOLANT_LEVEL_WARNING_UNSPECIFIED,
+        )
+        oil_level_warning = OilLevelWarning.get(
+            data["oilLevelWarning"],
+            OilLevelWarning.OIL_LEVEL_WARNING_UNSPECIFIED,
+        )
+        service_warning = ServiceWarning.get(
+            data["serviceWarning"],
+            ServiceWarning.SERVICE_WARNING_UNSPECIFIED,
+        )
 
         return cls(
             brake_fluid_level_warning=brake_fluid_level_warning,
