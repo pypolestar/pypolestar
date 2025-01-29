@@ -243,3 +243,41 @@ QUERY_GET_BATTERY_DATA = gql(
     }
     """
 )
+
+QUERY_TELEMATICS = gql(
+    """
+    query CarTelematics($vin:String!) {
+        carTelematics(vin: $vin) {
+            health {
+                brakeFluidLevelWarning
+                daysToService
+                distanceToServiceKm
+                engineCoolantLevelWarning
+                eventUpdatedTimestamp { iso unix }
+                oilLevelWarning
+                serviceWarning
+            }
+            battery {
+                averageEnergyConsumptionKwhPer100Km
+                batteryChargeLevelPercentage
+                chargerConnectionStatus
+                chargingCurrentAmps
+                chargingPowerWatts
+                chargingStatus
+                estimatedChargingTimeMinutesToTargetDistance
+                estimatedChargingTimeToFullMinutes
+                estimatedDistanceToEmptyKm
+                estimatedDistanceToEmptyMiles
+                eventUpdatedTimestamp { iso unix }
+            }
+            odometer {
+                averageSpeedKmPerHour
+                eventUpdatedTimestamp { iso unix }
+                odometerMeters
+                tripMeterAutomaticKm
+                tripMeterManualKm
+            }
+        }
+    }
+    """
+)

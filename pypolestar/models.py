@@ -34,6 +34,38 @@ class ChargingStatus(StrEnum):
     CHARGING_STATUS_SMART_CHARGING = "Smart Charging"
 
 
+class BrakeFluidLevelWarning(StrEnum):
+    BRAKE_FLUID_LEVEL_WARNING_NO_WARNING = "No Warning"
+    BRAKE_FLUID_LEVEL_WARNING_UNSPECIFIED = "Unspecified"
+    BRAKE_FLUID_LEVEL_WARNING_TOO_LOW = "Too Low"
+
+
+class EngineCoolantLevelWarning(StrEnum):
+    ENGINE_COOLANT_LEVEL_WARNING_NO_WARNING = "No Warning"
+    ENGINE_COOLANT_LEVEL_WARNING_UNSPECIFIED = "Unspecified"
+    ENGINE_COOLANT_LEVEL_WARNING_TOO_LOW = "Too Low"
+
+
+class OilLevelWarning(StrEnum):
+    OIL_LEVEL_WARNING_NO_WARNING = "No Warning"
+    OIL_LEVEL_WARNING_UNSPECIFIED = "Unspecified"
+    OIL_LEVEL_WARNING_TOO_LOW = "Too Low"
+    OIL_LEVEL_WARNING_TOO_HIGH = "Too High"
+    OIL_LEVEL_WARNING_SERVICE_REQUIRED = "Service Required"
+
+
+class ServiceWarning(StrEnum):
+    SERVICE_WARNING_NO_WARNING = "No Warning"
+    SERVICE_WARNING_UNSPECIFIED = "Unspecified"
+    SERVICE_WARNING_SERVICE_REQUIRED = "Service Required"
+    SERVICE_WARNING_REGULAR_MAINTENANCE_ALMOST_TIME_FOR_SERVICE = "Regular Maintenance Almost Time For Service"
+    SERVICE_WARNING_DISTANCE_DRIVEN_ALMOST_TIME_FOR_SERVICE = "Distance Driven Almost Time For Service"
+    SERVICE_WARNING_REGULAR_MAINTENANCE_TIME_FOR_SERVICE = "Regular Maintenance Time For Service"
+    SERVICE_WARNING_DISTANCE_DRIVEN_TIME_FOR_SERVICE = "Distance Driven Time For Service"
+    SERVICE_WARNING_REGULAR_MAINTENANCE_OVERDUE_FOR_SERVICE = "Regular Maintenance Overdue For Service"
+    SERVICE_WARNING_DISTANCE_DRIVEN_OVERDUE_FOR_SERVICE = "Distance Driven Overdue For Service"
+
+
 @dataclass(frozen=True)
 class CarBaseInformation:
     _received_timestamp: datetime
@@ -224,5 +256,77 @@ class CarBatteryData(CarBaseInformation):
             estimated_charging_time_to_full_minutes=get_field_name_int("estimatedChargingTimeToFullMinutes", data),
             estimated_distance_to_empty_km=get_field_name_int("estimatedDistanceToEmptyKm", data),
             event_updated_timestamp=get_field_name_datetime("eventUpdatedTimestamp/iso", data),
+            _received_timestamp=datetime.now(tz=timezone.utc),
+        )
+
+
+@dataclass(frozen=True)
+class CarHealthData(CarBaseInformation):
+    brake_fluid_level_warning: BrakeFluidLevelWarning | None
+    days_to_service: int | None
+    distance_to_service_km: int | None
+    engine_coolant_level_warning: EngineCoolantLevelWarning | None
+    oil_level_warning: OilLevelWarning | None
+    service_warning: ServiceWarning | None
+    event_updated_timestamp: datetime | None
+
+    @classmethod
+    def from_dict(cls, data: GqlDict) -> Self:
+        if not isinstance(data, dict):
+            raise TypeError
+
+        try:
+            brake_fluid_level_warning = BrakeFluidLevelWarning[get_field_name_str("brakeFluidLevelWarning", data) or ""]
+        except KeyError:
+            brake_fluid_level_warning = None
+
+        try:
+            engine_coolant_level_warning = EngineCoolantLevelWarning[
+                get_field_name_str("engineCoolantLevelWarning", data) or ""
+            ]
+        except KeyError:
+            engine_coolant_level_warning = None
+
+        try:
+            oil_level_warning = OilLevelWarning[get_field_name_str("oilLevelWarning", data) or ""]
+        except KeyError:
+            oil_level_warning = None
+
+        try:
+            service_warning = ServiceWarning[get_field_name_str("serviceWarning", data) or ""]
+        except KeyError:
+            service_warning = None
+
+        return cls(
+            brake_fluid_level_warning=brake_fluid_level_warning,
+            days_to_service=get_field_name_int("daysToService", data),
+            distance_to_service_km=get_field_name_int("distanceToServiceKm", data),
+            engine_coolant_level_warning=engine_coolant_level_warning,
+            oil_level_warning=oil_level_warning,
+            service_warning=service_warning,
+            event_updated_timestamp=get_field_name_datetime("eventUpdatedTimestamp/iso", data),
+            _received_timestamp=datetime.now(tz=timezone.utc),
+        )
+
+
+@dataclass(frozen=True)
+class CarTelematicsData(CarBaseInformation):
+    health: CarHealthData | None
+    battery: CarBatteryData | None
+    odometer: CarOdometerData | None
+
+    @classmethod
+    def from_dict(cls, data: GqlDict) -> Self:
+        if not isinstance(data, dict):
+            raise TypeError
+
+        health = data.get("health")
+        battery = data.get("battery")
+        odometer = data.get("odometer")
+
+        return cls(
+            health=(CarHealthData.from_dict(health) if isinstance(health, dict) else None),
+            battery=(CarBatteryData.from_dict(battery) if isinstance(battery, dict) else None),
+            odometer=(CarOdometerData.from_dict(odometer) if isinstance(odometer, dict) else None),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )

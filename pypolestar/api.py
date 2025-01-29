@@ -12,7 +12,7 @@ from gql.transport.exceptions import TransportQueryError
 from graphql import DocumentNode
 
 from .auth import PolestarAuth
-from .const import API_MYSTAR_V2_URL, BATTERY_DATA, CAR_INFO_DATA, ODO_METER_DATA
+from .const import API_MYSTAR_V2_URL, BATTERY_DATA, CAR_INFO_DATA, ODO_METER_DATA, TELEMATICS_DATA
 from .exceptions import (
     PolestarApiException,
     PolestarAuthException,
@@ -24,10 +24,11 @@ from .graphql import (
     QUERY_GET_CONSUMER_CARS_V2,
     QUERY_GET_CONSUMER_CARS_V2_VERBOSE,
     QUERY_GET_ODOMETER_DATA,
+    QUERY_TELEMATICS,
     get_gql_client,
     get_gql_session,
 )
-from .models import CarBatteryData, CarInformationData, CarOdometerData
+from .models import CarBatteryData, CarInformationData, CarOdometerData, CarTelematicsData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,6 +117,27 @@ class PolestarApi:
             except Exception as exc:
                 raise ValueError("Failed to convert car information data") from exc
 
+    def get_car_telematics(self, vin: str) -> CarTelematicsData | None:
+        """
+        Get car telematics for the specified VIN.
+
+        Args:
+            vin: The vehicle identification number
+        Returns:
+            CarTelematicsData if data exists, None otherwise
+        Raises:
+            KeyError: If the VIN doesn't exist
+            ValueError: If data conversion fails
+        """
+
+        self._ensure_data_for_vin(vin)
+
+        if data := self.data_by_vin[vin].get(TELEMATICS_DATA):
+            try:
+                return CarTelematicsData.from_dict(data)
+            except Exception as exc:
+                raise ValueError("Failed to convert car telematics data") from exc
+
     def get_car_battery(self, vin: str) -> CarBatteryData | None:
         """
         Get car battery information for the specified VIN.
@@ -158,7 +180,13 @@ class PolestarApi:
             except Exception as exc:
                 raise ValueError("Failed to convert car odometer data") from exc
 
-    async def update_latest_data(self, vin: str) -> None:
+    async def update_latest_data(
+        self,
+        vin: str,
+        update_odometer: bool = True,
+        update_battery: bool = True,
+        update_telematics: bool = False,
+    ) -> None:
         """Get the latest data from the Polestar API."""
 
         self._ensure_data_for_vin(vin)
@@ -174,8 +202,12 @@ class PolestarApi:
                 self.logger.debug("Starting update for VIN %s", vin)
                 t1 = time.perf_counter()
 
-                await self._get_odometer_data(vin)
-                await self._get_battery_data(vin)
+                if update_odometer:
+                    await self._get_odometer_data(vin)
+                if update_battery:
+                    await self._get_battery_data(vin)
+                if update_telematics:
+                    await self._get_telematics_data(vin)
 
                 t2 = time.perf_counter()
                 self.logger.debug("Update for VIN %s took %.3f seconds", vin, t2 - t1)
@@ -183,6 +215,18 @@ class PolestarApi:
             except Exception as exc:
                 self.latest_call_code = 500
                 raise exc
+
+    async def _get_telematics_data(self, vin: str) -> None:
+        """Get the latest telematics data from the Polestar API."""
+
+        result = await self._query_graph_ql(
+            query=QUERY_TELEMATICS,
+            variable_values={"vin": vin},
+        )
+
+        res = self.data_by_vin[vin][TELEMATICS_DATA] = result[TELEMATICS_DATA]
+
+        self.logger.debug("Received telematics data: %s", res)
 
     async def _get_odometer_data(self, vin: str) -> None:
         """Get the latest odometer data from the Polestar API."""
