@@ -97,7 +97,7 @@ def test_car_information_data_invalid():
     with pytest.raises(KeyError):
         CarInformationData.from_dict({})  # Test with empty dict
     with pytest.raises(TypeError):
-        CarInformationData.from_dict(None)  # Test with None
+        CarInformationData.from_dict(None)  # type: ignore # noqa
 
 
 def test_car_battery_data_polestar3(polestar3_test_data):
@@ -152,7 +152,7 @@ def test_car_battery_data_invalid():
     with pytest.raises(KeyError):
         CarBatteryData.from_dict({})
     with pytest.raises(TypeError):
-        CarBatteryData.from_dict(None)
+        CarBatteryData.from_dict(None)  # type: ignore # noqa
 
 
 def test_car_odometer_data_polestar3(polestar3_test_data):
@@ -160,6 +160,7 @@ def test_car_odometer_data_polestar3(polestar3_test_data):
     assert data is not None
     assert isinstance(data, CarOdometerData)
     assert data.average_speed_km_per_hour == 42
+    assert data.event_updated_timestamp is not None
     assert data.event_updated_timestamp.timestamp() == 1731338116
     assert data.trip_meter_automatic_km == 4.2
     assert data.trip_meter_manual_km == 1984.0
@@ -170,7 +171,7 @@ def test_car_odometer_data_invalid():
     with pytest.raises(KeyError):
         CarOdometerData.from_dict({})
     with pytest.raises(TypeError):
-        CarOdometerData.from_dict(None)
+        CarOdometerData.from_dict(None)  # type: ignore # noqa
 
 
 def test_telematics_information_data_polestar3(polestar3_test_data):
