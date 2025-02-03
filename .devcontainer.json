@@ -22,7 +22,8 @@
                 "python.analysis.autoImportCompletions": true,
                 "python.defaultInterpreterPath": "/usr/local/bin/python",
                 "[python]": {
-                    "editor.defaultFormatter": "charliermarsh.ruff"
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "ruff.lineLength": 120
                 }
             }
         }
