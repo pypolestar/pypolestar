@@ -69,7 +69,7 @@ class PolestarApi:
 
         self.gql_session = await get_gql_session(self.gql_client)
 
-        if not (car_data := await self._get_vehicle_data(verbose=verbose)):
+        if not (car_data := await self._get_all_vehicles_data(verbose=verbose)):
             self.logger.warning("No cars found for %s", self.username)
             return
 
@@ -183,6 +183,7 @@ class PolestarApi:
     async def update_latest_data(
         self,
         vin: str,
+        update_vehicle: bool = False,
         update_odometer: bool = True,
         update_battery: bool = True,
         update_telematics: bool = False,
@@ -202,12 +203,14 @@ class PolestarApi:
                 self.logger.debug("Starting update for VIN %s", vin)
                 t1 = time.perf_counter()
 
+                if update_vehicle:
+                    await self._update_vehicle_data(vin)
                 if update_odometer:
-                    await self._get_odometer_data(vin)
+                    await self._update_odometer_data(vin)
                 if update_battery:
-                    await self._get_battery_data(vin)
+                    await self._update_battery_data(vin)
                 if update_telematics:
-                    await self._get_telematics_data(vin)
+                    await self._update_telematics_data(vin)
 
                 t2 = time.perf_counter()
                 self.logger.debug("Update for VIN %s took %.3f seconds", vin, t2 - t1)
@@ -216,7 +219,18 @@ class PolestarApi:
                 self.latest_call_code = 500
                 raise exc
 
-    async def _get_telematics_data(self, vin: str) -> None:
+    async def _update_vehicle_data(self, vin: str) -> None:
+        """Get the latest vehicle data from the Polestar API."""
+
+        for data in await self._get_all_vehicles_data():
+            if data["vin"] == vin:
+                self.logger.debug("Received vehicle data: %s", data)
+                self.data_by_vin[vin][CAR_INFO_DATA] = data
+                return
+
+        self.logger.warning("VIN %s not found", vin)
+
+    async def _update_telematics_data(self, vin: str) -> None:
         """Get the latest telematics data from the Polestar API."""
 
         result = await self._query_graph_ql(
@@ -228,7 +242,7 @@ class PolestarApi:
 
         self.logger.debug("Received telematics data: %s", res)
 
-    async def _get_odometer_data(self, vin: str) -> None:
+    async def _update_odometer_data(self, vin: str) -> None:
         """Get the latest odometer data from the Polestar API."""
 
         result = await self._query_graph_ql(
@@ -240,7 +254,9 @@ class PolestarApi:
 
         self.logger.debug("Received odometer data: %s", res)
 
-    async def _get_battery_data(self, vin: str) -> None:
+    async def _update_battery_data(self, vin: str) -> None:
+        """Get the latest battery data from the Polestar API."""
+
         result = await self._query_graph_ql(
             query=QUERY_GET_BATTERY_DATA,
             variable_values={"vin": vin},
@@ -250,8 +266,8 @@ class PolestarApi:
 
         self.logger.debug("Received battery data: %s", res)
 
-    async def _get_vehicle_data(self, verbose: bool = False) -> list[dict[str, Any]]:
-        """Get the latest vehicle data from the Polestar API."""
+    async def _get_all_vehicles_data(self, verbose: bool = False) -> list[dict[str, Any]]:
+        """Get the all vehicle data from the Polestar API."""
 
         result = await self._query_graph_ql(
             query=(QUERY_GET_CONSUMER_CARS_V2_VERBOSE if verbose else QUERY_GET_CONSUMER_CARS_V2),
