@@ -159,6 +159,9 @@ class PolestarApi:
             except Exception as exc:
                 raise ValueError("Failed to convert car battery data") from exc
 
+        if telematics := self.get_car_telematics(vin):
+            return telematics.battery
+
     def get_car_odometer(self, vin: str) -> CarOdometerData | None:
         """
         Get car odometer information for the specified VIN.
@@ -180,13 +183,16 @@ class PolestarApi:
             except Exception as exc:
                 raise ValueError("Failed to convert car odometer data") from exc
 
+        if telematics := self.get_car_telematics(vin):
+            return telematics.odometer
+
     async def update_latest_data(
         self,
         vin: str,
         update_vehicle: bool = False,
-        update_odometer: bool = True,
-        update_battery: bool = True,
-        update_telematics: bool = False,
+        update_odometer: bool = False,
+        update_battery: bool = False,
+        update_telematics: bool = True,
     ) -> None:
         """Get the latest data from the Polestar API."""
 
