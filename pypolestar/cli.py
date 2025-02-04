@@ -22,16 +22,9 @@ async def async_main():
 
     parser.add_argument("--username", type=str, help="Polestar ID")
     parser.add_argument("--vin", type=str, help="VIN")
-    parser.add_argument(
-        "--dump",
-        action="store_true",
-        help="Dump vehicle data to VIN.json",
-    )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Enable debug output",
-    )
+    parser.add_argument("--verbose", action="store_true", help="Fetch verbose data")
+    parser.add_argument("--dump", action="store_true", help="Dump vehicle data to VIN.json")
+    parser.add_argument("--debug", action="store_true", help="Enable debug output")
 
     args = parser.parse_args()
 
@@ -50,7 +43,7 @@ async def async_main():
     api = PolestarApi(username=username, password=password)
 
     try:
-        await api.async_init()
+        await api.async_init(verbose=args.verbose)
     except PolestarAuthException as exc:
         logging.error("Authentication failed for %s", username)
         raise SystemExit(1) from exc
