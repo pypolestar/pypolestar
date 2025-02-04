@@ -52,7 +52,7 @@ async def async_main():
 
     if args.dump:
         for vin in [args.vin] if args.vin else api.get_available_vins():
-            await api.update_latest_data(vin, update_telematics=True, update_battery=True, update_odometer=True)
+            await api.update_latest_data(vin)
             dump_api_data(api, vin)
 
 

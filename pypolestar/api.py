@@ -184,9 +184,9 @@ class PolestarApi:
         self,
         vin: str,
         update_vehicle: bool = False,
-        update_odometer: bool = True,
-        update_battery: bool = True,
-        update_telematics: bool = False,
+        update_odometer: bool = False,
+        update_battery: bool = False,
+        update_telematics: bool = True,
     ) -> None:
         """Get the latest data from the Polestar API."""
 
