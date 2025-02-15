@@ -146,13 +146,18 @@ class CarInformationData(CarBaseInformation):
         if not isinstance(data, dict):
             raise TypeError
 
+        # "Polestar 4" is reported as "Polestar4"
+        model_name = get_field_name_str("content/model/name", data)
+        if match := re.match(r"^([A-Za-z]+)(\d+)$", model_name):
+            model_name = " ".join([match.group(1), match.group(2)])
+
         return cls(
             vin=get_field_name_str("vin", data),
             internal_vehicle_identifier=get_field_name_str("internalVehicleIdentifier", data),
             registration_no=get_field_name_str("registrationNo", data),
             registration_date=get_field_name_date("registrationDate", data),
             factory_complete_date=get_field_name_date("factoryCompleteDate", data),
-            model_name=get_field_name_str("content/model/name", data),
+            model_name=model_name,
             image_url=get_field_name_str("content/images/studio/url", data),
             battery=get_field_name_str("content/specification/battery", data),
             torque=get_field_name_str("content/specification/torque", data),
