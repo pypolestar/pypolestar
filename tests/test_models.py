@@ -42,6 +42,11 @@ def polestar3_test_data():
     return get_test_data(DATADIR / "polestar3.json")
 
 
+@pytest.fixture
+def polestar4_test_data():
+    return get_test_data(DATADIR / "polestar4.json")
+
+
 def test_car_information_data_polestar3(polestar3_test_data):
     data = CarInformationData.from_dict(polestar3_test_data["getConsumerCarsV2"])
     # Verify expected attributes
@@ -62,6 +67,28 @@ def test_car_information_data_polestar3(polestar3_test_data):
     assert data.software_version is None
     assert data.battery_information == CarBatteryInformationData(capacity=111, voltage=400, modules=17)
     assert data.torque_nm == 840
+
+
+def test_car_information_data_polestar4(polestar4_test_data):
+    data = CarInformationData.from_dict(polestar4_test_data["getConsumerCarsV2"])
+    # Verify expected attributes
+    assert data is not None
+    assert isinstance(data, CarInformationData)
+    assert data.vin == "XXXXXXXXXXX000000"
+    assert data.internal_vehicle_identifier == "cf4bfecc-cb00-49f3-af84-4a5b21b02da6"
+    assert data.registration_no == "MLB007"
+    assert data.registration_date is None
+    assert data.factory_complete_date == date(year=2024, month=7, day=11)
+    assert data.model_name == "Polestar4"
+    assert (
+        data.image_url
+        == "https://car-images.polestar.com/carvis/pub/prod/814/2025/summary-transparent/PB/37000/P04300/19/221014/_/220004/_/1/221010/default.png"
+    )
+    assert data.battery == "400Vlithium-ionbattery,100kWhcapacity,cell-to-pack,110cells"
+    assert data.torque == "343Nm/253lbf-ft"
+    assert data.software_version is None
+    assert data.battery_information == CarBatteryInformationData(capacity=100, voltage=400, modules=None)
+    assert data.torque_nm == 343
 
 
 def test_car_battery_information_data():
