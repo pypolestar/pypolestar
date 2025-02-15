@@ -85,6 +85,7 @@ class CarBatteryInformationData:
     voltage: int | None
     capacity: int | None
     modules: int | None
+    cells: int | None
 
     # Examples: "78 kWh", "78.3 kWh", "78.3 KWH"
     _CAPACITY_PATTERN = re.compile(r"(\d+(?:\.\d+)?)\s*(?:kwh|kWh|KWH)", re.IGNORECASE)
@@ -94,6 +95,9 @@ class CarBatteryInformationData:
 
     # Examples: "27 modules", "27 Modules"
     _MODULES_PATTERN = re.compile(r"(\d+)\s*modules?", re.IGNORECASE)
+
+    # Examples: "27 cells", "27 Cells"
+    _CELLS_PATTERN = re.compile(r"(\d+)\s*cells?", re.IGNORECASE)
 
     @classmethod
     def from_battery_str(cls, battery_information: str) -> Self:
@@ -112,7 +116,12 @@ class CarBatteryInformationData:
         else:
             modules = None
 
-        return cls(voltage=voltage, capacity=capacity, modules=modules)
+        if match := cls._CELLS_PATTERN.search(battery_information):
+            cells = int(match.group(1))
+        else:
+            cells = None
+
+        return cls(voltage=voltage, capacity=capacity, modules=modules, cells=cells)
 
 
 @dataclass(frozen=True)
