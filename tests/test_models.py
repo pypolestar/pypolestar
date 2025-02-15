@@ -22,10 +22,9 @@ from pypolestar.models import (
 DATADIR = Path(__file__).parent.resolve() / "data"
 
 
-@pytest.fixture
-def polestar3_test_data():
+def get_test_data(filename: Path):
     try:
-        with open(DATADIR / "polestar3.json") as fp:
+        with open(filename) as fp:
             return json.load(fp)
     except FileNotFoundError as exc:
         pytest.skip(f"Test data file not found: {exc.filename}")
@@ -35,13 +34,12 @@ def polestar3_test_data():
 
 @pytest.fixture
 def polestar2_test_data():
-    try:
-        with open(DATADIR / "polestar2.json") as fp:
-            return json.load(fp)
-    except FileNotFoundError as exc:
-        pytest.skip(f"Test data file not found: {exc.filename}")
-    except json.JSONDecodeError as exc:
-        pytest.skip(f"Invalid JSON in test data file: {exc}")
+    return get_test_data(DATADIR / "polestar2.json")
+
+
+@pytest.fixture
+def polestar3_test_data():
+    return get_test_data(DATADIR / "polestar3.json")
 
 
 def test_car_information_data_polestar3(polestar3_test_data):
