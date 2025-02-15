@@ -65,7 +65,7 @@ def test_car_information_data_polestar2(polestar2_test_data):
     assert data.battery == "82 kWh"
     assert data.torque == "490 Nm / 361 lb-ft"
     assert data.software_version == "P03.01"
-    assert data.battery_information == CarBatteryInformationData(capacity=82, voltage=None, modules=None)
+    assert data.battery_information == CarBatteryInformationData(capacity=82, voltage=None, modules=None, cells=None)
     assert data.torque_nm == 490
 
 
@@ -87,7 +87,7 @@ def test_car_information_data_polestar3(polestar3_test_data):
     assert data.battery == "400V lithium-ion battery, 111 kWh capacity, 17 modules"
     assert data.torque == "840 Nm / 620 lbf-ft"
     assert data.software_version is None
-    assert data.battery_information == CarBatteryInformationData(capacity=111, voltage=400, modules=17)
+    assert data.battery_information == CarBatteryInformationData(capacity=111, voltage=400, modules=17, cells=None)
     assert data.torque_nm == 840
 
 
@@ -109,7 +109,7 @@ def test_car_information_data_polestar4(polestar4_test_data):
     assert data.battery == "400Vlithium-ionbattery,100kWhcapacity,cell-to-pack,110cells"
     assert data.torque == "343Nm/253lbf-ft"
     assert data.software_version is None
-    assert data.battery_information == CarBatteryInformationData(capacity=100, voltage=400, modules=None)
+    assert data.battery_information == CarBatteryInformationData(capacity=100, voltage=400, modules=None, cells=110)
     assert data.torque_nm == 343
 
 
@@ -117,26 +117,31 @@ def test_car_battery_information_data():
     # Polestar3
     assert CarBatteryInformationData.from_battery_str(
         "400V lithium-ion battery, 111 kWh capacity, 17 modules"
-    ) == CarBatteryInformationData(voltage=400, capacity=111, modules=17)
+    ) == CarBatteryInformationData(voltage=400, capacity=111, modules=17, cells=None)
 
     # Polestar 2 Standard range Single motor
     assert CarBatteryInformationData.from_battery_str(
         "400V lithium-ion battery, 69 kWh capacity, 24 modules"
-    ) == CarBatteryInformationData(voltage=400, capacity=69, modules=24)
+    ) == CarBatteryInformationData(voltage=400, capacity=69, modules=24, cells=None)
 
     # Polestar 2 Long range Single motor
     assert CarBatteryInformationData.from_battery_str(
         "400V lithium-ion battery, 82 kWh capacity, 27 modules"
-    ) == CarBatteryInformationData(voltage=400, capacity=82, modules=27)
+    ) == CarBatteryInformationData(voltage=400, capacity=82, modules=27, cells=None)
+
+    # Polestar 4 Long range Single motor
+    assert CarBatteryInformationData.from_battery_str(
+        "400Vlithium-ionbattery,100kWhcapacity,cell-to-pack,110cells"
+    ) == CarBatteryInformationData(voltage=400, capacity=100, modules=None, cells=110)
 
     # Imaginary Polestar
     assert CarBatteryInformationData.from_battery_str(
         "800V lithium-ion battery, 111 kWh capacity, 17 modules"
-    ) == CarBatteryInformationData(voltage=800, capacity=111, modules=17)
+    ) == CarBatteryInformationData(voltage=800, capacity=111, modules=17, cells=None)
 
     # Imaginary Polestar
     assert CarBatteryInformationData.from_battery_str("4xAAA") == CarBatteryInformationData(
-        voltage=None, capacity=None, modules=None
+        voltage=None, capacity=None, modules=None, cells=None
     )
 
 
