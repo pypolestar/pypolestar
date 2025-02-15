@@ -101,7 +101,7 @@ def test_car_information_data_polestar4(polestar4_test_data):
     assert data.registration_no == "MLB007"
     assert data.registration_date is None
     assert data.factory_complete_date == date(year=2024, month=7, day=11)
-    assert data.model_name == "Polestar4"
+    assert data.model_name == "Polestar 4"
     assert (
         data.image_url
         == "https://car-images.polestar.com/carvis/pub/prod/814/2025/summary-transparent/PB/37000/P04300/19/221014/_/220004/_/1/221010/default.png"
