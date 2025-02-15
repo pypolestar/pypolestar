@@ -47,6 +47,28 @@ def polestar4_test_data():
     return get_test_data(DATADIR / "polestar4.json")
 
 
+def test_car_information_data_polestar2(polestar2_test_data):
+    data = CarInformationData.from_dict(polestar2_test_data["getConsumerCarsV2"])
+    # Verify expected attributes
+    assert data is not None
+    assert isinstance(data, CarInformationData)
+    assert data.vin == "AAAAAAAA1AA111111"
+    assert data.internal_vehicle_identifier == "88888888-aaaa-bbbb-cccc-aaa11aaa1111"
+    assert data.registration_no == "AA-00-AA"
+    assert data.registration_date == date(year=2023, month=8, day=1)
+    assert data.factory_complete_date == date(year=2023, month=5, day=20)
+    assert data.model_name == "Polestar 2"
+    assert (
+        data.image_url
+        == "https://cas.polestar.com/image/dynamic/MY24_2335/534/summary-transparent-v1/FE/1/19/72900/RFA000/R184/LR02/_/BD02/EV05/JB0A/2G03/ET01/default.png?market=pt"
+    )
+    assert data.battery == "82 kWh"
+    assert data.torque == "490 Nm / 361 lb-ft"
+    assert data.software_version == "P03.01"
+    assert data.battery_information == CarBatteryInformationData(capacity=82, voltage=None, modules=None)
+    assert data.torque_nm == 490
+
+
 def test_car_information_data_polestar3(polestar3_test_data):
     data = CarInformationData.from_dict(polestar3_test_data["getConsumerCarsV2"])
     # Verify expected attributes
@@ -199,15 +221,6 @@ def test_car_odometer_data_invalid():
         CarOdometerData.from_dict(None)  # type: ignore # noqa
 
 
-def test_telematics_information_data_polestar3(polestar3_test_data):
-    data = CarTelematicsData.from_dict(polestar3_test_data["carTelematics"])
-    assert data is not None
-    assert isinstance(data, CarTelematicsData)
-    assert isinstance(data.health, CarHealthData) or data.health is None
-    assert isinstance(data.battery, CarBatteryData)
-    assert isinstance(data.odometer, CarOdometerData)
-
-
 def test_telematics_information_data_polestar2(polestar2_test_data):
     data = CarTelematicsData.from_dict(polestar2_test_data["carTelematics"])
 
@@ -220,6 +233,35 @@ def test_telematics_information_data_polestar2(polestar2_test_data):
     assert data.health.engine_coolant_level_warning == EngineCoolantLevelWarning.ENGINE_COOLANT_LEVEL_WARNING_NO_WARNING
     assert data.health.brake_fluid_level_warning == BrakeFluidLevelWarning.BRAKE_FLUID_LEVEL_WARNING_NO_WARNING
     assert data.health.oil_level_warning == OilLevelWarning.OIL_LEVEL_WARNING_NO_WARNING
+    assert data.health.service_warning == ServiceWarning.SERVICE_WARNING_NO_WARNING
+
+    assert isinstance(data.battery, CarBatteryData)
+    assert isinstance(data.odometer, CarOdometerData)
+
+
+def test_telematics_information_data_polestar3(polestar3_test_data):
+    data = CarTelematicsData.from_dict(polestar3_test_data["carTelematics"])
+    assert data is not None
+    assert isinstance(data, CarTelematicsData)
+    assert isinstance(data.health, CarHealthData) or data.health is None
+    assert isinstance(data.battery, CarBatteryData)
+    assert isinstance(data.odometer, CarOdometerData)
+
+
+def test_telematics_information_data_polestar4(polestar4_test_data):
+    data = CarTelematicsData.from_dict(polestar4_test_data["carTelematics"])
+
+    assert data is not None
+    assert isinstance(data, CarTelematicsData)
+
+    assert isinstance(data.health, CarHealthData)
+    assert data.health.days_to_service == 601
+    assert data.health.distance_to_service_km == 26515
+    assert (
+        data.health.engine_coolant_level_warning == EngineCoolantLevelWarning.ENGINE_COOLANT_LEVEL_WARNING_UNSPECIFIED
+    )
+    assert data.health.brake_fluid_level_warning == BrakeFluidLevelWarning.BRAKE_FLUID_LEVEL_WARNING_NO_WARNING
+    assert data.health.oil_level_warning == OilLevelWarning.OIL_LEVEL_WARNING_UNSPECIFIED
     assert data.health.service_warning == ServiceWarning.SERVICE_WARNING_NO_WARNING
 
     assert isinstance(data.battery, CarBatteryData)
