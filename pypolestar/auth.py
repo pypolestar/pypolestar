@@ -133,6 +133,7 @@ class PolestarAuth:
                 self.logger.debug("Initial token acquired")
                 return
             except Exception as exc:
+                await self.async_logout()
                 raise PolestarAuthException("Unable to acquire initial token") from exc
 
     def _parse_token_response(self, response: httpx.Response) -> None:
