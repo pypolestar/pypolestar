@@ -17,7 +17,7 @@ from .const import (
     OIDC_SCOPE,
     TOKEN_REFRESH_WINDOW_MIN,
 )
-from .exceptions import PolestarAuthException
+from .exceptions import PolestarAuthException, PolestarAuthFailedException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,6 +132,9 @@ class PolestarAuth:
                 await self._authorization_code()
                 self.logger.debug("Initial token acquired")
                 return
+            except PolestarAuthFailedException as exc:
+                await self.async_logout()
+                raise exc
             except Exception as exc:
                 await self.async_logout()
                 raise PolestarAuthException("Unable to acquire initial token") from exc
@@ -227,10 +230,17 @@ class PolestarAuth:
             self.latest_call_code = result.status_code
             raise PolestarAuthException("Error getting code", result.status_code)
 
+        # 3xx must have a next request (from "Location")
+        if result.next_request is None:
+            raise PolestarAuthException("Missing next request in 3xx response")
+
         # get the realUrl
         url = result.url
         code = result.next_request.url.params.get("code")
         uid = result.next_request.url.params.get("uid")
+
+        if result.next_request.url.params.get("authMessage") == "ERR001":
+            raise PolestarAuthFailedException("Authentication error (ERR001), invalid username/password")
 
         # handle missing code (e.g., accepting terms and conditions)
         if code is None and uid:

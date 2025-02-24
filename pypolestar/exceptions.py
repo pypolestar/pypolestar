@@ -13,6 +13,10 @@ class PolestarAuthException(PolestarApiException):
         self.error_code = error_code
 
 
+class PolestarAuthFailedException(PolestarApiException):
+    """Exception for failed authentication (invalid credentials)."""
+
+
 class PolestarNotAuthorizedException(PolestarApiException):
     """Exception for unauthorized call."""
 
