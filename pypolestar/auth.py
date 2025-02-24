@@ -239,7 +239,7 @@ class PolestarAuth:
         uid = result.next_request.url.params.get("uid")
 
         if result.next_request.url.params.get("authMessage") == "ERR001":
-            raise PolestarAuthFailedException("Authentication error")
+            raise PolestarAuthFailedException("Authentication error (ERR001), invalid username/password")
 
         # handle missing code (e.g., accepting terms and conditions)
         if code is None and uid:
