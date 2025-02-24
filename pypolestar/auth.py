@@ -231,7 +231,8 @@ class PolestarAuth:
             raise PolestarAuthException("Error getting code", result.status_code)
 
         # 3xx must have a next request (from "Location")
-        assert result.next_request is not None
+        if result.next_request is None:
+            raise PolestarAuthException("Missing next request in 3xx response")
 
         # get the realUrl
         url = result.url
