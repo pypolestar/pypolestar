@@ -3,7 +3,9 @@ import base64
 import hashlib
 import logging
 import os
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from typing import Self
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -24,6 +26,21 @@ _LOGGER = logging.getLogger(__name__)
 
 def b64urlencode(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).decode().rstrip("=")
+
+
+@dataclass(frozen=True)
+class OidcConfiguration:
+    issuer: str
+    token_endpoint: str
+    authorization_endpoint: str
+
+    @classmethod
+    def from_dict(cls, data: dict[str, str]) -> Self:
+        return cls(
+            issuer=data["issuer"],
+            token_endpoint=data["token_endpoint"],
+            authorization_endpoint=data["authorization_endpoint"],
+        )
 
 
 class PolestarAuth:
@@ -47,7 +64,7 @@ class PolestarAuth:
         self.token_lifetime: int | None = None
         self.token_expiry: datetime | None = None
 
-        self.oidc_configuration = {}
+        self.oidc_configuration: OidcConfiguration | None = None
         self.oidc_provider = OIDC_PROVIDER_BASE_URL
         self.oidc_code_verifier: str | None = None
         self.oidc_state: str | None = None
@@ -89,7 +106,7 @@ class PolestarAuth:
             raise PolestarAuthUnavailable(
                 message="Unable to get OIDC configuration", error_code=exc.response.status_code
             ) from exc
-        self.oidc_configuration = result.json()
+        self.oidc_configuration = OidcConfiguration.from_dict(result.json())
 
     def need_token_refresh(self) -> bool:
         """Return True if token needs refresh"""
@@ -158,8 +175,12 @@ class PolestarAuth:
         try:
             self.access_token = payload["access_token"]
             self.refresh_token = payload["refresh_token"]
-            self.token_lifetime = payload["expires_in"]
-            self.token_expiry = datetime.now(tz=timezone.utc) + timedelta(seconds=self.token_lifetime)
+            if token_lifetime := payload["expires_in"]:
+                self.token_lifetime = token_lifetime
+                self.token_expiry = datetime.now(tz=timezone.utc) + timedelta(seconds=token_lifetime)
+            else:
+                self.token_lifetime = None
+                self.token_expiry = None
         except KeyError as exc:
             self.logger.error("Token response missing key: %s", exc)
             raise PolestarAuthException("Token response missing key") from exc
@@ -182,8 +203,11 @@ class PolestarAuth:
 
         self.logger.debug("Call token endpoint with grant_type=%s", token_request["grant_type"])
 
+        if not self.oidc_configuration:
+            raise PolestarAuthException(message="No OIDC configuration")
+
         response = await self.client_session.post(
-            self.oidc_configuration["token_endpoint"],
+            self.oidc_configuration.token_endpoint,
             data=token_request,
             timeout=HTTPX_TIMEOUT,
         )
@@ -201,8 +225,11 @@ class PolestarAuth:
 
         self.logger.debug("Call token endpoint with grant_type=%s", token_request["grant_type"])
 
+        if not self.oidc_configuration:
+            raise PolestarAuthException(message="No OIDC configuration")
+
         response = await self.client_session.post(
-            self.oidc_configuration["token_endpoint"],
+            self.oidc_configuration.token_endpoint,
             data=token_request,
             timeout=HTTPX_TIMEOUT,
         )
@@ -290,8 +317,11 @@ class PolestarAuth:
             "scope": OIDC_SCOPE,
         }
 
+        if not self.oidc_configuration:
+            raise PolestarAuthException(message="No OIDC configuration")
+
         result = await self.client_session.get(
-            self.oidc_configuration["authorization_endpoint"],
+            self.oidc_configuration.authorization_endpoint,
             params=params,
             timeout=HTTPX_TIMEOUT,
         )
