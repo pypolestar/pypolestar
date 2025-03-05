@@ -17,7 +17,7 @@ from .const import (
     OIDC_SCOPE,
     TOKEN_REFRESH_WINDOW_MIN,
 )
-from .exceptions import PolestarAuthException, PolestarAuthFailedException
+from .exceptions import PolestarAuthException, PolestarAuthFailedException, PolestarAuthUnavailable
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,8 +82,13 @@ class PolestarAuth:
         return self.latest_call_code
 
     async def update_oidc_configuration(self) -> None:
-        result = await self.client_session.get(urljoin(OIDC_PROVIDER_BASE_URL, "/.well-known/openid-configuration"))
-        result.raise_for_status()
+        try:
+            result = await self.client_session.get(urljoin(OIDC_PROVIDER_BASE_URL, "/.well-known/openid-configuration"))
+            result.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise PolestarAuthUnavailable(
+                message="Unable to get OIDC configuration", error_code=exc.response.status_code
+            ) from exc
         self.oidc_configuration = result.json()
 
     def need_token_refresh(self) -> bool:
