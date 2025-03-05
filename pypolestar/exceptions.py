@@ -23,3 +23,7 @@ class PolestarNotAuthorizedException(PolestarApiException):
 
 class PolestarNoDataException(PolestarApiException):
     """Exception for no data."""
+
+
+class PolestarAuthUnavailable(PolestarAuthException):
+    """Exception for unavailable authentication."""
