@@ -103,6 +103,11 @@ class PolestarAuth:
             result = await self.client_session.get(urljoin(OIDC_PROVIDER_BASE_URL, "/.well-known/openid-configuration"))
             result.raise_for_status()
         except httpx.HTTPStatusError as exc:
+            self.logger.warning(
+                "Failed to retrieve OIDC configuration: %s, status code: %d",
+                exc.response.reason_phrase,
+                exc.response.status_code,
+            )
             raise PolestarAuthUnavailable(
                 message="Unable to get OIDC configuration", error_code=exc.response.status_code
             ) from exc
