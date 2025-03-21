@@ -1,28 +1,38 @@
-[tool.poetry]
+[project]
 name = "pypolestar"
 version = "1.7.0"
 description = "Library to control Polestar"
-authors = ["Tuen Lee <leeyuentuen@gmail.com>", "Jakob Schlyter <jakob@kirei.se>"]
+authors = [
+    { name= " Tuen Lee", email= " leeyuentuen@gmail.com" },
+    { name = "Jakob Schlyter", email = "jakob@kirei.se" }
+]
 license = "MIT"
 readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "gql[httpx]>=3.5.2",
+    "httpx>=0.28.1",
+]
+
+[project.urls]
 repository = "https://github.com/pypolestar/pypolestar"
 
-[tool.poetry.scripts]
+[project.scripts]
 polestar = "pypolestar.cli:main"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-httpx = ">=0.27.2"
-gql = {version = "^3.5.0", extras = ["httpx"]}
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.4"
-ruff = "^0.9.3"
-pytest-ruff = "^0.4.1"
+[tool.setuptools]
+packages = ["pypolestar"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.1",
+    "pytest>=8.3.5",
+    "pytest-ruff>=0.4.1",
+]
 
 [tool.ruff]
 line-length = 120
@@ -43,7 +53,7 @@ select = [
     # isort
     "I",
 ]
-ignore = ["E501","SIM108"]
+ignore = ["E501","SIM108","UP017"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
