@@ -21,6 +21,6 @@ jobs:
       - name: Install and configure Poetry
         run: pip install poetry
       - name: Publish package
-        run: poetry build
+        run: uv build
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

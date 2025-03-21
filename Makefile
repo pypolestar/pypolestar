@@ -3,11 +3,11 @@ SOURCE=		pypolestar
 all:
 
 lint:
-	ruff check $(SOURCE)
+	uv run ruff check $(SOURCE)
 
 reformat:
-	ruff check --select I --fix $(SOURCE) tests
-	ruff format $(SOURCE) tests
+	uv run ruff check --select I --fix $(SOURCE) tests
+	uv run ruff format $(SOURCE) tests
 
 test:
-	poetry run pytest --ruff --ruff-format
+	uv run pytest --ruff --ruff-format
