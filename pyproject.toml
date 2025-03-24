@@ -1,6 +1,6 @@
 [project]
 name = "pypolestar"
-version = "1.7.0"
+version = "1.7.1"
 description = "Library to control Polestar"
 authors = [
     { name= " Tuen Lee", email= "leeyuentuen@gmail.com" },

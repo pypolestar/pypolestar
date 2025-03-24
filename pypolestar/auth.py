@@ -3,6 +3,7 @@ import base64
 import hashlib
 import logging
 import os
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Self
@@ -242,29 +243,20 @@ class PolestarAuth:
         self._parse_token_response(response)
 
     async def _get_code(self) -> str | None:
-        query_params = await self._get_resume_path()
+        resume_path = await self._get_resume_path()
 
-        # check if code is in query_params
-        if code := query_params.get("code"):
-            return code
-
-        # get the resume path
-        if not (resume_path := query_params.get("resumePath")):
-            self.logger.warning("Missing resumePath in authorization response")
-            return
-
-        params = {"client_id": OIDC_CLIENT_ID}
+        params = self.get_params()
         data = {"pf.username": self.username, "pf.pass": self.password}
         result = await self.client_session.post(
-            urljoin(
-                OIDC_PROVIDER_BASE_URL,
-                f"/as/{resume_path}/resume/as/authorization.ping",
-            ),
+            urljoin(OIDC_PROVIDER_BASE_URL, resume_path),
             params=params,
             data=data,
         )
+
         if result.status_code not in [302, 303]:
             self.latest_call_code = result.status_code
+            if 'authMessage: "ERR001"' in result.text:
+                raise PolestarAuthFailedException("Authentication error (ERR001), invalid username/password")
             raise PolestarAuthException("Error getting code", result.status_code)
 
         # 3xx must have a next request (from "Location")
@@ -276,19 +268,13 @@ class PolestarAuth:
         code = result.next_request.url.params.get("code")
         uid = result.next_request.url.params.get("uid")
 
-        if result.next_request.url.params.get("authMessage") == "ERR001":
-            raise PolestarAuthFailedException("Authentication error (ERR001), invalid username/password")
-
         # handle missing code (e.g., accepting terms and conditions)
         if code is None and uid:
             self.logger.debug("Code missing; submit confirmation for uid=%s and retry", uid)
-            params = {"client_id": OIDC_CLIENT_ID}
+            params = self.get_params()
             data = {"pf.submit": True, "subject": uid}
             result = await self.client_session.post(
-                urljoin(
-                    OIDC_PROVIDER_BASE_URL,
-                    f"/as/{resume_path}/resume/as/authorization.ping",
-                ),
+                urljoin(OIDC_PROVIDER_BASE_URL, resume_path),
                 params=params,
                 data=data,
             )
@@ -310,20 +296,11 @@ class PolestarAuth:
     async def _get_resume_path(self):
         """Get Resume Path from Polestar."""
 
-        self.oidc_state = self.get_state()
-
-        params = {
-            "response_type": "code",
-            "client_id": OIDC_CLIENT_ID,
-            "redirect_uri": OIDC_REDIRECT_URI,
-            "state": self.oidc_state,
-            "code_challenge_method": "S256",
-            "code_challenge": self.get_code_challenge(),
-            "scope": OIDC_SCOPE,
-        }
-
         if not self.oidc_configuration:
             raise PolestarAuthException(message="No OIDC configuration")
+
+        self.oidc_state = self.get_state()
+        params = self.get_params()
 
         result = await self.client_session.get(
             self.oidc_configuration.authorization_endpoint,
@@ -332,11 +309,13 @@ class PolestarAuth:
         )
         self.latest_call_code = result.status_code
 
-        if result.status_code in (303, 302):
-            return result.next_request.url.params
+        if match := re.search(r'url:\s*"(.+)"', result.text):
+            resume_path = match.group(1)
+            self.logger.debug("Returning resume path: %s", resume_path)
+            return resume_path
 
         self.logger.error("Error: %s", result.text)
-        raise PolestarAuthException("Error getting resume path ", result.status_code)
+        raise PolestarAuthException("Error getting resume path", result.status_code)
 
     @staticmethod
     def get_state() -> str:
@@ -347,7 +326,20 @@ class PolestarAuth:
         return b64urlencode(os.urandom(32))
 
     def get_code_challenge(self) -> str:
-        self.oidc_code_verifier = self.get_code_verifier()
+        if self.oidc_code_verifier is None:
+            self.oidc_code_verifier = self.get_code_verifier()
         m = hashlib.sha256()
         m.update(self.oidc_code_verifier.encode())
         return b64urlencode(m.digest())
+
+    def get_params(self) -> dict[str, str | None]:
+        return {
+            "client_id": OIDC_CLIENT_ID,
+            "redirect_uri": OIDC_REDIRECT_URI,
+            "response_type": "code",
+            "scope": OIDC_SCOPE,
+            "state": self.oidc_state,
+            "code_challenge": self.get_code_challenge(),
+            "code_challenge_method": "S256",
+            "response_mode": "query",
+        }
