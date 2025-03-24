@@ -3,7 +3,7 @@ name = "pypolestar"
 version = "1.7.0"
 description = "Library to control Polestar"
 authors = [
-    { name= " Tuen Lee", email= " leeyuentuen@gmail.com" },
+    { name= " Tuen Lee", email= "leeyuentuen@gmail.com" },
     { name = "Jakob Schlyter", email = "jakob@kirei.se" }
 ]
 license = "MIT"
