@@ -6,7 +6,7 @@ on:
 
 jobs:
   pypi_release:
-    name: Build with Poetry and Publish to PyPI
+    name: Build and Publish to PyPI
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -18,9 +18,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install and configure Poetry
-        run: pip install poetry
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: latest
       - name: Publish package
-        run: poetry build
+        run: uv build
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
