@@ -309,7 +309,7 @@ class PolestarAuth:
         )
         self.latest_call_code = result.status_code
 
-        if match := re.search(r'url:\s*"(.+)"', result.text):
+        if match := re.search(r'(?:url|action):\s*"(.+)"', result.text):
             resume_path = match.group(1)
             self.logger.debug("Returning resume path: %s", resume_path)
             return resume_path
