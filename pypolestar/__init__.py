@@ -1,8 +1,12 @@
 """Python Polestar API"""
 
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 
 from .api import PolestarApi
 
-__version__ = version("pypolestar")
+try:
+    __version__ = version("pypolestar")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
+
 __all__ = ["PolestarApi"]
