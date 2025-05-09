@@ -9,9 +9,9 @@ from .utils import (
     GqlDict,
     get_field_name_date,
     get_field_name_datetime,
-    get_field_name_float,
     get_field_name_int,
     get_field_name_str,
+    get_field_name_timestamp,
 )
 
 
@@ -190,11 +190,11 @@ class CarOdometerData(CarBaseInformation):
             raise TypeError
 
         return cls(
-            average_speed_km_per_hour=get_field_name_int("averageSpeedKmPerHour", data),
+            average_speed_km_per_hour=None,
             odometer_meters=get_field_name_int("odometerMeters", data),
-            trip_meter_automatic_km=get_field_name_float("tripMeterAutomaticKm", data),
-            trip_meter_manual_km=get_field_name_float("tripMeterManualKm", data),
-            event_updated_timestamp=get_field_name_datetime("eventUpdatedTimestamp/iso", data),
+            trip_meter_automatic_km=None,
+            trip_meter_manual_km=None,
+            event_updated_timestamp=get_field_name_timestamp("timestamp/seconds", data),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )
 
@@ -203,9 +203,9 @@ class CarOdometerData(CarBaseInformation):
 class CarBatteryData(CarBaseInformation):
     average_energy_consumption_kwh_per_100km: float | None
     battery_charge_level_percentage: int | None
-    charger_connection_status: ChargingConnectionStatus
-    charging_current_amps: int
-    charging_power_watts: int
+    charger_connection_status: ChargingConnectionStatus | None
+    charging_current_amps: int | None
+    charging_power_watts: int | None
     charging_status: ChargingStatus
     estimated_charging_time_minutes_to_target_distance: int | None
     estimated_charging_time_to_full_minutes: int | None
@@ -256,29 +256,22 @@ class CarBatteryData(CarBaseInformation):
         if not isinstance(data, dict):
             raise TypeError
 
-        charger_connection_status = ChargingConnectionStatus.get(
-            data["chargerConnectionStatus"],
-            ChargingConnectionStatus.CHARGER_CONNECTION_STATUS_UNSPECIFIED,
-        )
-
         charging_status = ChargingStatus.get(
             data["chargingStatus"],
             ChargingStatus.CHARGING_STATUS_UNSPECIFIED,
         )
 
         return cls(
-            average_energy_consumption_kwh_per_100km=get_field_name_float("averageEnergyConsumptionKwhPer100Km", data),
+            average_energy_consumption_kwh_per_100km=None,
             battery_charge_level_percentage=get_field_name_int("batteryChargeLevelPercentage", data),
-            charger_connection_status=charger_connection_status,
-            charging_current_amps=get_field_name_int("chargingCurrentAmps", data) or 0,
-            charging_power_watts=get_field_name_int("chargingPowerWatts", data) or 0,
+            charger_connection_status=None,
+            charging_current_amps=None,
+            charging_power_watts=None,
             charging_status=charging_status,
-            estimated_charging_time_minutes_to_target_distance=get_field_name_int(
-                "estimatedChargingTimeMinutesToTargetDistance", data
-            ),
+            estimated_charging_time_minutes_to_target_distance=None,
             estimated_charging_time_to_full_minutes=get_field_name_int("estimatedChargingTimeToFullMinutes", data),
             estimated_distance_to_empty_km=get_field_name_int("estimatedDistanceToEmptyKm", data),
-            event_updated_timestamp=get_field_name_datetime("eventUpdatedTimestamp/iso", data),
+            event_updated_timestamp=get_field_name_timestamp("timestamp/seconds", data),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )
 
@@ -322,7 +315,7 @@ class CarHealthData(CarBaseInformation):
             engine_coolant_level_warning=engine_coolant_level_warning,
             oil_level_warning=oil_level_warning,
             service_warning=service_warning,
-            event_updated_timestamp=get_field_name_datetime("eventUpdatedTimestamp/iso", data),
+            event_updated_timestamp=get_field_name_timestamp("timestamp/seconds", data),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )
 
@@ -338,9 +331,9 @@ class CarTelematicsData(CarBaseInformation):
         if not isinstance(data, dict):
             raise TypeError
 
-        health = data.get("health")
-        battery = data.get("battery")
-        odometer = data.get("odometer")
+        health = data.get("health")[0] if len(data.get("health")) else None
+        battery = data.get("battery")[0] if len(data.get("battery")) else None
+        odometer = data.get("odometer")[0] if len(data.get("odometer")) else None
 
         return cls(
             health=(CarHealthData.from_dict(health) if isinstance(health, dict) else None),

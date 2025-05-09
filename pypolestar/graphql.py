@@ -210,72 +210,34 @@ QUERY_GET_CONSUMER_CARS_V2_VERBOSE = gql(
     """
 )
 
-QUERY_GET_ODOMETER_DATA = gql(
-    """
-    query GetOdometerData($vin:String!) {
-        getOdometerData(vin:$vin) {
-            averageSpeedKmPerHour
-            eventUpdatedTimestamp { iso unix }
-            odometerMeters
-            tripMeterAutomaticKm
-            tripMeterManualKm
-        }
-    }
-    """
-)
 
-QUERY_GET_BATTERY_DATA = gql(
+QUERY_TELEMATICS_V2 = gql(
     """
-    query GetBatteryData($vin:String!) {
-        getBatteryData(vin:$vin) {
-            averageEnergyConsumptionKwhPer100Km
-            batteryChargeLevelPercentage
-            chargerConnectionStatus
-            chargingCurrentAmps
-            chargingPowerWatts
-            chargingStatus
-            estimatedChargingTimeMinutesToTargetDistance
-            estimatedChargingTimeToFullMinutes
-            estimatedDistanceToEmptyKm
-            estimatedDistanceToEmptyMiles
-            eventUpdatedTimestamp { iso unix }
-        }
-    }
-    """
-)
-
-QUERY_TELEMATICS = gql(
-    """
-    query CarTelematics($vin:String!) {
-        carTelematics(vin: $vin) {
+    query CarTelematicsV2($vins: [String!]!) {
+        carTelematicsV2(vins: $vins) {
             health {
+                vin
                 brakeFluidLevelWarning
                 daysToService
                 distanceToServiceKm
                 engineCoolantLevelWarning
-                eventUpdatedTimestamp { iso unix }
                 oilLevelWarning
                 serviceWarning
+                timestamp { seconds nanos }
             }
             battery {
-                averageEnergyConsumptionKwhPer100Km
+                vin
                 batteryChargeLevelPercentage
-                chargerConnectionStatus
-                chargingCurrentAmps
-                chargingPowerWatts
                 chargingStatus
-                estimatedChargingTimeMinutesToTargetDistance
+                chargingStatus
                 estimatedChargingTimeToFullMinutes
                 estimatedDistanceToEmptyKm
-                estimatedDistanceToEmptyMiles
-                eventUpdatedTimestamp { iso unix }
+                timestamp { seconds nanos }
             }
             odometer {
-                averageSpeedKmPerHour
-                eventUpdatedTimestamp { iso unix }
+                vin
                 odometerMeters
-                tripMeterAutomaticKm
-                tripMeterManualKm
+                timestamp { seconds nanos }
             }
         }
     }

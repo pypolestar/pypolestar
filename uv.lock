@@ -297,7 +297,6 @@ wheels = [
 
 [[package]]
 name = "pypolestar"
-version = "1.7.2"
 source = { editable = "." }
 dependencies = [
     { name = "gql", extra = ["httpx"] },
