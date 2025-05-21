@@ -12,7 +12,7 @@ from gql.transport.exceptions import TransportQueryError
 from graphql import DocumentNode
 
 from .auth import PolestarAuth
-from .const import API_MYSTAR_V2_URL, BATTERY_DATA, CAR_INFO_DATA, ODO_METER_DATA, TELEMATICS_DATA
+from .const import API_MYSTAR_V2_URL, CAR_INFO_DATA, TELEMATICS_DATA
 from .exceptions import (
     PolestarApiException,
     PolestarAuthException,
@@ -20,15 +20,13 @@ from .exceptions import (
     PolestarNotAuthorizedException,
 )
 from .graphql import (
-    QUERY_GET_BATTERY_DATA,
     QUERY_GET_CONSUMER_CARS_V2,
     QUERY_GET_CONSUMER_CARS_V2_VERBOSE,
-    QUERY_GET_ODOMETER_DATA,
-    QUERY_TELEMATICS,
+    QUERY_TELEMATICS_V2,
     get_gql_client,
     get_gql_session,
 )
-from .models import CarBatteryData, CarInformationData, CarOdometerData, CarTelematicsData
+from .models import CarInformationData, CarTelematicsData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,64 +132,14 @@ class PolestarApi:
 
         if data := self.data_by_vin[vin].get(TELEMATICS_DATA):
             try:
-                return CarTelematicsData.from_dict(data)
+                return CarTelematicsData.from_dict(data, vin)
             except Exception as exc:
                 raise ValueError("Failed to convert car telematics data") from exc
-
-    def get_car_battery(self, vin: str) -> CarBatteryData | None:
-        """
-        Get car battery information for the specified VIN.
-
-        Args:
-            vin: The vehicle identification number
-        Returns:
-            CarBatteryData if data exists, None otherwise
-        Raises:
-            KeyError: If the VIN doesn't exist
-            ValueError: If data conversion fails
-        """
-
-        self._ensure_data_for_vin(vin)
-
-        if data := self.data_by_vin[vin].get(BATTERY_DATA):
-            try:
-                return CarBatteryData.from_dict(data)
-            except Exception as exc:
-                raise ValueError("Failed to convert car battery data") from exc
-
-        if telematics := self.get_car_telematics(vin):
-            return telematics.battery
-
-    def get_car_odometer(self, vin: str) -> CarOdometerData | None:
-        """
-        Get car odometer information for the specified VIN.
-
-        Args:
-            vin: The vehicle identification number
-        Returns:
-            CarOdometerData if data exists, None otherwise
-        Raises:
-            KeyError: If the VIN doesn't exist
-            ValueError: If data conversion fails
-        """
-
-        self._ensure_data_for_vin(vin)
-
-        if data := self.data_by_vin[vin].get(ODO_METER_DATA):
-            try:
-                return CarOdometerData.from_dict(data)
-            except Exception as exc:
-                raise ValueError("Failed to convert car odometer data") from exc
-
-        if telematics := self.get_car_telematics(vin):
-            return telematics.odometer
 
     async def update_latest_data(
         self,
         vin: str,
         update_vehicle: bool = False,
-        update_odometer: bool = False,
-        update_battery: bool = False,
         update_telematics: bool = True,
     ) -> None:
         """Get the latest data from the Polestar API."""
@@ -211,10 +159,6 @@ class PolestarApi:
 
                 if update_vehicle:
                     await self._update_vehicle_data(vin)
-                if update_odometer:
-                    await self._update_odometer_data(vin)
-                if update_battery:
-                    await self._update_battery_data(vin)
                 if update_telematics:
                     await self._update_telematics_data(vin)
 
@@ -240,37 +184,12 @@ class PolestarApi:
         """Get the latest telematics data from the Polestar API."""
 
         result = await self._query_graph_ql(
-            query=QUERY_TELEMATICS,
-            variable_values={"vin": vin},
+            query=QUERY_TELEMATICS_V2,
+            variable_values={"vins": [vin]},
         )
-
         res = self.data_by_vin[vin][TELEMATICS_DATA] = result[TELEMATICS_DATA]
 
         self.logger.debug("Received telematics data: %s", res)
-
-    async def _update_odometer_data(self, vin: str) -> None:
-        """Get the latest odometer data from the Polestar API."""
-
-        result = await self._query_graph_ql(
-            query=QUERY_GET_ODOMETER_DATA,
-            variable_values={"vin": vin},
-        )
-
-        res = self.data_by_vin[vin][ODO_METER_DATA] = result[ODO_METER_DATA]
-
-        self.logger.debug("Received odometer data: %s", res)
-
-    async def _update_battery_data(self, vin: str) -> None:
-        """Get the latest battery data from the Polestar API."""
-
-        result = await self._query_graph_ql(
-            query=QUERY_GET_BATTERY_DATA,
-            variable_values={"vin": vin},
-        )
-
-        res = self.data_by_vin[vin][BATTERY_DATA] = result[BATTERY_DATA]
-
-        self.logger.debug("Received battery data: %s", res)
 
     async def _get_all_vehicles_data(self, verbose: bool = False) -> list[dict[str, Any]]:
         """Get the all vehicle data from the Polestar API."""

@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 GqlScalar = int | float | str | bool | None
 
@@ -116,5 +116,23 @@ def get_field_name_datetime(field_name: str, data: GqlDict) -> datetime | None:
         if isinstance(value, str):
             try:
                 return datetime.fromisoformat(value)
+            except ValueError as exc:
+                raise ValueError(f"Invalid datetime format at '{field_name}': {value}") from exc
+
+
+def get_field_name_timestamp(field_name: str, data: GqlDict) -> datetime | None:
+    """Extract and convert a timestamp value from the nested dictionary.
+    Args:
+        field_name: Path to the datetime field
+        data: Nested dictionary containing the data
+    Returns:
+        datetime object if conversion successful, None otherwise
+    """
+    if value := get_field_name_value(field_name, data):
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, str):
+            try:
+                return datetime.fromtimestamp(int(value), tz=timezone.utc)
             except ValueError as exc:
                 raise ValueError(f"Invalid datetime format at '{field_name}': {value}") from exc
