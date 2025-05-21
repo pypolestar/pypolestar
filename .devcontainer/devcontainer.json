@@ -1,7 +1,9 @@
 {
-    "name": "pypolestar/pypolestar",
-    "image": "mcr.microsoft.com/devcontainers/python:dev-3.13",
-    "postCreateCommand": "pip install poetry && poetry install --all-extras",
+    "name": "uv",
+    "build": {
+        "context": "..",
+        "dockerfile": "Dockerfile"
+    },
     "customizations": {
         "vscode": {
             "extensions": [
@@ -20,14 +22,21 @@
                 "files.trimTrailingWhitespace": true,
                 "python.analysis.typeCheckingMode": "basic",
                 "python.analysis.autoImportCompletions": true,
-                "python.defaultInterpreterPath": "/usr/local/bin/python",
                 "[python]": {
                     "editor.defaultFormatter": "charliermarsh.ruff",
                     "ruff.lineLength": 120
-                }
+                },
+                "python.defaultInterpreterPath": "/home/vscode/.venv/bin/python"
             }
         }
     },
+    "containerEnv": {
+        "DISPLAY": "dummy",
+        "PYTHONUNBUFFERED": "True",
+        "UV_LINK_MODE": "copy",
+        "UV_PROJECT_ENVIRONMENT": "/home/vscode/.venv"
+    },
+    "postCreateCommand": "uv sync --frozen",
     "remoteUser": "vscode",
     "features": {}
 }
