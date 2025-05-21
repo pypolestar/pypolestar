@@ -326,14 +326,21 @@ class CarTelematicsData(CarBaseInformation):
     battery: CarBatteryData | None
     odometer: CarOdometerData | None
 
+    @staticmethod
+    def data_for_vin(data: list[GqlDict], vin: str | None) -> GqlDict | None:
+        for item in data:
+            if isinstance(item, dict) and (vin is None or item.get("vin") == vin):
+                return item
+        return None
+
     @classmethod
-    def from_dict(cls, data: GqlDict) -> Self:
+    def from_dict(cls, data: GqlDict, vin: str | None = None) -> Self:
         if not isinstance(data, dict):
             raise TypeError
 
-        health = data.get("health")[0] if len(data.get("health")) else None
-        battery = data.get("battery")[0] if len(data.get("battery")) else None
-        odometer = data.get("odometer")[0] if len(data.get("odometer")) else None
+        health = cls.data_for_vin(data=data["health"], vin=vin)
+        battery = cls.data_for_vin(data=data["battery"], vin=vin)
+        odometer = cls.data_for_vin(data=data["odometer"], vin=vin)
 
         return cls(
             health=(CarHealthData.from_dict(health) if isinstance(health, dict) else None),

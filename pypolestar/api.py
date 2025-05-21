@@ -132,7 +132,7 @@ class PolestarApi:
 
         if data := self.data_by_vin[vin].get(TELEMATICS_DATA):
             try:
-                return CarTelematicsData.from_dict(data)
+                return CarTelematicsData.from_dict(data, vin)
             except Exception as exc:
                 raise ValueError("Failed to convert car telematics data") from exc
 
