@@ -19,6 +19,60 @@
       "versionTimestamp": null
     }
   },
+  "getCarImages": {
+    "transparent": [
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary-transparent/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/0.png",
+        "angle": 0
+      },
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary-transparent/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/1.png",
+        "angle": 1
+      },
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary-transparent/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/2.png",
+        "angle": 2
+      },
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary-transparent/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/3.png",
+        "angle": 3
+      },
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary-transparent/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/4.png",
+        "angle": 4
+      },
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary-transparent/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/5.png",
+        "angle": 5
+      }
+    ],
+    "opaque": [
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/0.jpg",
+        "angle": 0
+      },
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/1.jpg",
+        "angle": 1
+      },
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/2.jpg",
+        "angle": 2
+      },
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/3.jpg",
+        "angle": 3
+      },
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/4.jpg",
+        "angle": 4
+      },
+      {
+        "url": "https://car-images.polestar.com/359/2024/summary/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/5.jpg",
+        "angle": 5
+      }
+    ]
+  },
   "carTelematicsV2": {
     "health": [null],
     "battery": [
