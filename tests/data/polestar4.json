@@ -1,67 +1,62 @@
 {
-	"getConsumerCarsV2": {
-		"vin": "XXXXXXXXXXX000000",
-		"internalVehicleIdentifier": "cf4bfecc-cb00-49f3-af84-4a5b21b02da6",
-		"registrationNo": "MLB007",
-		"registrationDate": null,
-		"factoryCompleteDate": "2024-07-11",
-		"content": {
-			"model": {
-				"name": "Polestar4"
-			},
-			"images": {
-				"studio": {
-					"url": "https://car-images.polestar.com/carvis/pub/prod/814/2025/summary-transparent/PB/37000/P04300/19/221014/_/220004/_/1/221010/default.png"
-				}
-			},
-			"specification": {
-				"battery": "400Vlithium-ionbattery,100kWhcapacity,cell-to-pack,110cells",
-				"torque": "343Nm/253lbf-ft"
-			}
-		},
-		"software": {
-			"version": null,
-			"versionTimestamp": null
-		}
-	},
-	"carTelematics": {
-		"health": {
-			"brakeFluidLevelWarning": "BRAKE_FLUID_LEVEL_WARNING_NO_WARNING",
-			"daysToService": 601,
-			"distanceToServiceKm": 26515,
-			"engineCoolantLevelWarning": null,
-			"eventUpdatedTimestamp": {
-				"iso": "2025-02-15T08:01:37.000Z",
-				"unix": "1739606497"
-			},
-			"oilLevelWarning": null,
-			"serviceWarning": "SERVICE_WARNING_NO_WARNING"
-		},
-		"battery": {
-			"averageEnergyConsumptionKwhPer100Km": null,
-			"batteryChargeLevelPercentage": 42,
-			"chargerConnectionStatus": "CHARGER_CONNECTION_STATUS_DISCONNECTED",
-			"chargingCurrentAmps": null,
-			"chargingPowerWatts": null,
-			"chargingStatus": "CHARGING_STATUS_IDLE",
-			"estimatedChargingTimeMinutesToTargetDistance": null,
-			"estimatedChargingTimeToFullMinutes": 74,
-			"estimatedDistanceToEmptyKm": 261,
-			"estimatedDistanceToEmptyMiles": 162,
-			"eventUpdatedTimestamp": {
-				"iso": "2025-02-15T08:01:37.000Z",
-				"unix": "1739606497"
-			}
-		},
-		"odometer": {
-			"averageSpeedKmPerHour": null,
-			"eventUpdatedTimestamp": {
-				"iso": "2025-02-15T08:01:37.000Z",
-				"unix": "1739606497"
-			},
-			"odometerMeters": 3525000,
-			"tripMeterAutomaticKm": 9,
-			"tripMeterManualKm": 3459
-		}
-	}
+  "getConsumerCarsV2": {
+    "vin": "XXXXXXXXXXX000000",
+    "internalVehicleIdentifier": "cf4bfecc-cb00-49f3-af84-4a5b21b02da6",
+    "registrationNo": "MLB007",
+    "registrationDate": null,
+    "factoryCompleteDate": "2024-07-11",
+    "content": {
+      "model": {
+        "name": "Polestar4"
+      },
+      "specification": {
+        "battery": "400Vlithium-ionbattery,100kWhcapacity,cell-to-pack,110cells",
+        "torque": "343Nm/253lbf-ft"
+      }
+    },
+    "software": {
+      "version": null,
+      "versionTimestamp": null
+    }
+  },
+  "carTelematics": {
+    "health": {
+      "brakeFluidLevelWarning": "BRAKE_FLUID_LEVEL_WARNING_NO_WARNING",
+      "daysToService": 601,
+      "distanceToServiceKm": 26515,
+      "engineCoolantLevelWarning": null,
+      "eventUpdatedTimestamp": {
+        "iso": "2025-02-15T08:01:37.000Z",
+        "unix": "1739606497"
+      },
+      "oilLevelWarning": null,
+      "serviceWarning": "SERVICE_WARNING_NO_WARNING"
+    },
+    "battery": {
+      "averageEnergyConsumptionKwhPer100Km": null,
+      "batteryChargeLevelPercentage": 42,
+      "chargerConnectionStatus": "CHARGER_CONNECTION_STATUS_DISCONNECTED",
+      "chargingCurrentAmps": null,
+      "chargingPowerWatts": null,
+      "chargingStatus": "CHARGING_STATUS_IDLE",
+      "estimatedChargingTimeMinutesToTargetDistance": null,
+      "estimatedChargingTimeToFullMinutes": 74,
+      "estimatedDistanceToEmptyKm": 261,
+      "estimatedDistanceToEmptyMiles": 162,
+      "eventUpdatedTimestamp": {
+        "iso": "2025-02-15T08:01:37.000Z",
+        "unix": "1739606497"
+      }
+    },
+    "odometer": {
+      "averageSpeedKmPerHour": null,
+      "eventUpdatedTimestamp": {
+        "iso": "2025-02-15T08:01:37.000Z",
+        "unix": "1739606497"
+      },
+      "odometerMeters": 3525000,
+      "tripMeterAutomaticKm": 9,
+      "tripMeterManualKm": 3459
+    }
+  }
 }

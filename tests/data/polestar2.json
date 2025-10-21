@@ -9,11 +9,6 @@
       "model": {
         "name": "Polestar 2"
       },
-      "images": {
-        "studio": {
-          "url": "https://cas.polestar.com/image/dynamic/MY24_2335/534/summary-transparent-v1/FE/1/19/72900/RFA000/R184/LR02/_/BD02/EV05/JB0A/2G03/ET01/default.png?market=pt"
-        }
-      },
       "specification": {
         "battery": "82 kWh",
         "torque": "490 Nm / 361 lb-ft"

@@ -167,7 +167,7 @@ class CarInformationData(CarBaseInformation):
             registration_date=get_field_name_date("registrationDate", data),
             factory_complete_date=get_field_name_date("factoryCompleteDate", data),
             model_name=model_name,
-            image_url=get_field_name_str("content/images/studio/url", data),
+            image_url=None,
             battery=get_field_name_str("content/specification/battery", data),
             torque=get_field_name_str("content/specification/torque", data),
             software_version=get_field_name_str("software/version", data),

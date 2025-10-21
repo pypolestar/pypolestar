@@ -58,10 +58,7 @@ def test_car_information_data_polestar2(polestar2_test_data):
     assert data.registration_date == date(year=2023, month=8, day=1)
     assert data.factory_complete_date == date(year=2023, month=5, day=20)
     assert data.model_name == "Polestar 2"
-    assert (
-        data.image_url
-        == "https://cas.polestar.com/image/dynamic/MY24_2335/534/summary-transparent-v1/FE/1/19/72900/RFA000/R184/LR02/_/BD02/EV05/JB0A/2G03/ET01/default.png?market=pt"
-    )
+    assert data.image_url is None
     assert data.battery == "82 kWh"
     assert data.torque == "490 Nm / 361 lb-ft"
     assert data.software_version == "P03.01"
@@ -80,10 +77,7 @@ def test_car_information_data_polestar3(polestar3_test_data):
     assert data.registration_date is None
     assert data.factory_complete_date == date(year=2024, month=4, day=16)
     assert data.model_name == "Polestar 3"
-    assert (
-        data.image_url
-        == "https://cas.polestar.com/image/dynamic/MY24_2207/359/summary-transparent-v2/EA/1/72300/R80000/R102/LR02/EV02/K503/JB07/SW01/_/ET01/default.png?market=se"
-    )
+    assert data.image_url is None
     assert data.battery == "400V lithium-ion battery, 111 kWh capacity, 17 modules"
     assert data.torque == "840 Nm / 620 lbf-ft"
     assert data.software_version is None
@@ -102,10 +96,7 @@ def test_car_information_data_polestar4(polestar4_test_data):
     assert data.registration_date is None
     assert data.factory_complete_date == date(year=2024, month=7, day=11)
     assert data.model_name == "Polestar 4"
-    assert (
-        data.image_url
-        == "https://car-images.polestar.com/carvis/pub/prod/814/2025/summary-transparent/PB/37000/P04300/19/221014/_/220004/_/1/221010/default.png"
-    )
+    assert data.image_url is None
     assert data.battery == "400Vlithium-ionbattery,100kWhcapacity,cell-to-pack,110cells"
     assert data.torque == "343Nm/253lbf-ft"
     assert data.software_version is None
