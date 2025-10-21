@@ -64,9 +64,6 @@ QUERY_GET_CONSUMER_CARS_V2 = gql(
             factoryCompleteDate
             content {
                 model { name }
-                images {
-                    studio { url }
-                }
                 specification {
                     battery
                     torque
@@ -128,11 +125,6 @@ QUERY_GET_CONSUMER_CARS_V2_VERBOSE = gql(
                 pilotPackage { code name description excluded }
                 motor { name description excluded }
                 model { name code }
-                images {
-                    studio { url angles resolutions }
-                    location { url angles resolutions }
-                    interior { url angles resolutions }
-                }
                 specification {
                     battery
                     bodyType

@@ -9,11 +9,6 @@
       "model": {
         "name": "Polestar 3"
       },
-      "images": {
-        "studio": {
-          "url": "https://cas.polestar.com/image/dynamic/MY24_2207/359/summary-transparent-v2/EA/1/72300/R80000/R102/LR02/EV02/K503/JB07/SW01/_/ET01/default.png?market=se"
-        }
-      },
       "specification": {
         "battery": "400V lithium-ion battery, 111 kWh capacity, 17 modules",
         "torque": "840 Nm / 620 lbf-ft"
@@ -25,9 +20,7 @@
     }
   },
   "carTelematicsV2": {
-    "health": [
-      null
-    ],
+    "health": [null],
     "battery": [
       {
         "vin": "YSMYKEAE7RB000000",
