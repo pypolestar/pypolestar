@@ -291,6 +291,9 @@ class PolestarApi:
 
         gql_session = gql_session or self.gql_session
 
+        if gql_session is None:
+            raise RuntimeError("GraphQL not connected")
+
         try:
             result = await gql_session.execute(
                 query,
