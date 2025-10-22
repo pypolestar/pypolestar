@@ -34,7 +34,7 @@ from .graphql import (
     get_gql_client,
     get_gql_session,
 )
-from .models import CarImages, CarInformationData, CarTelematicsData
+from .models import CarImagesData, CarInformationData, CarTelematicsData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,7 +155,7 @@ class PolestarApi:
             except Exception as exc:
                 raise ValueError("Failed to convert car telematics data") from exc
 
-    def get_car_images(self, vin: str) -> CarImages | None:
+    def get_car_images(self, vin: str) -> CarImagesData | None:
         """
         Get car images for the specified VIN.
 
@@ -172,7 +172,7 @@ class PolestarApi:
 
         if data := self.data_by_vin[vin].get(CAR_IMAGES):
             try:
-                return CarImages.from_dict(data)
+                return CarImagesData.from_dict(data)
             except Exception as exc:
                 raise ValueError("Failed to convert car information data") from exc
 

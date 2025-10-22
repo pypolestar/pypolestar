@@ -357,11 +357,11 @@ class CarImage:
 
 
 @dataclass(frozen=True)
-class CarImages(CarBaseInformation):
+class CarImagesData(CarBaseInformation):
     transparent: list[CarImage]
     opaque: list[CarImage]
 
-    def get_image_by_angle(self, angle: int, transparent: bool = False) -> str | None:
+    def get_image_url_by_angle(self, angle: int, transparent: bool = False) -> str | None:
         for img in self.transparent if transparent else self.opaque:
             if img.angle == angle:
                 return img.url
