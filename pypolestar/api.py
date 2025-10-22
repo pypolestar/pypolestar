@@ -16,7 +16,7 @@ from .const import (
     API_MYSTAR_PUBLIC_API_KEY,
     API_MYSTAR_PUBLIC_URL,
     API_MYSTAR_V2_URL,
-    CAR_IMAGES,
+    CAR_IMAGES_DATA,
     CAR_INFO_DATA,
     TELEMATICS_DATA,
 )
@@ -94,7 +94,7 @@ class PolestarApi:
             if self.configured_vins and vin not in self.configured_vins:
                 continue
             self.data_by_vin[vin][CAR_INFO_DATA] = data
-            self.data_by_vin[vin][CAR_IMAGES] = await self._get_car_images(vin)
+            self.data_by_vin[vin][CAR_IMAGES_DATA] = await self._get_car_images(vin)
             self.available_vins.add(vin)
             self.logger.debug("API setup for VIN %s", vin)
 
@@ -170,11 +170,11 @@ class PolestarApi:
 
         self._ensure_data_for_vin(vin)
 
-        if data := self.data_by_vin[vin].get(CAR_IMAGES):
+        if data := self.data_by_vin[vin].get(CAR_IMAGES_DATA):
             try:
                 return CarImagesData.from_dict(data)
             except Exception as exc:
-                raise ValueError("Failed to convert car information data") from exc
+                raise ValueError("Failed to convert car images data") from exc
 
     async def update_latest_data(
         self,
@@ -245,7 +245,7 @@ class PolestarApi:
 
         return result[CAR_INFO_DATA]
 
-    async def _get_car_images(self, vin: str) -> list[dict[str, Any]]:
+    async def _get_car_images(self, vin: str) -> dict[str, Any]:
         """Get the car images data from the Polestar API."""
 
         pno34 = self.data_by_vin[vin][CAR_INFO_DATA]["pno34"]
@@ -263,11 +263,11 @@ class PolestarApi:
             headers={"x-api-key": self.public_api_key},
         )
 
-        if result[CAR_IMAGES] is None:
+        if not result[CAR_IMAGES_DATA]:
             self.logger.exception("No car images found")
             raise PolestarNoDataException("No cars images found")
 
-        return result[CAR_IMAGES]
+        return result[CAR_IMAGES_DATA]
 
     def _ensure_data_for_vin(self, vin: str) -> None:
         """Ensure we have data for given VIN"""

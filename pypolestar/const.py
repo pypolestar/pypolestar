@@ -4,7 +4,7 @@ CAR_INFO_DATA = "getConsumerCarsV2"
 ODO_METER_DATA = "getOdometerData"
 BATTERY_DATA = "getBatteryData"
 TELEMATICS_DATA = "carTelematicsV2"
-CAR_IMAGES = "getCarImages"
+CAR_IMAGES_DATA = "getCarImages"
 
 HTTPX_TIMEOUT = 30
 TOKEN_REFRESH_WINDOW_MIN = 300
