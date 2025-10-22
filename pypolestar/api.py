@@ -62,15 +62,15 @@ class PolestarApi:
         self.available_vins: set[str] = set()
         self.logger = _LOGGER.getChild(unique_id) if unique_id else _LOGGER
 
-        self.api_url = API_MYSTAR_V2_URL
+        self.api_url_private = API_MYSTAR_V2_URL
         self.api_url_public = API_MYSTAR_PUBLIC_URL
 
         self.public_api_key = public_api_key or API_MYSTAR_PUBLIC_API_KEY
 
-        self.gql_client = get_gql_client(url=self.api_url, client=self.client_session)
+        self.gql_client_private = get_gql_client(url=self.api_url_private, client=self.client_session)
         self.gql_client_public = get_gql_client(url=self.api_url_public, client=self.client_session)
 
-        self.gql_session: AsyncClientSession | None = None
+        self.gql_session_private: AsyncClientSession | None = None
         self.gql_session_public: AsyncClientSession | None = None
 
     async def async_init(self, verbose: bool = False) -> None:
@@ -82,7 +82,7 @@ class PolestarApi:
         if self.auth.access_token is None:
             raise PolestarAuthException(f"No access token for {self.username}")
 
-        self.gql_session = await get_gql_session(self.gql_client)
+        self.gql_session_private = await get_gql_session(self.gql_client_private)
         self.gql_session_public = await get_gql_session(self.gql_client_public)
 
         if not (car_data := await self._get_all_vehicles_data(verbose=verbose)):
@@ -259,8 +259,7 @@ class PolestarApi:
                 "structureWeek": structure_week,
                 "modelYear": model_year,
             },
-            gql_session=self.gql_session_public,
-            headers={"x-api-key": self.public_api_key},
+            public_api=True,
         )
 
         if not result[CAR_IMAGES_DATA]:
@@ -283,13 +282,16 @@ class PolestarApi:
         query: DocumentNode,
         operation_name: str | None = None,
         variable_values: dict[str, Any] | None = None,
-        gql_session: AsyncClientSession | None = None,
-        headers: dict[str, str] | None = None,
+        public_api: bool = False,
     ):
-        if self.gql_session is None:
-            raise RuntimeError("GraphQL not connected")
+        """Execute a GraphQL query against the Polestar API."""
 
-        gql_session = gql_session or self.gql_session
+        if public_api:
+            gql_session = self.gql_session_public
+            headers = {"x-api-key": self.public_api_key}
+        else:
+            gql_session = self.gql_session_private
+            headers = {"Authorization": f"Bearer {self.auth.access_token}"}
 
         if gql_session is None:
             raise RuntimeError("GraphQL not connected")
@@ -299,12 +301,7 @@ class PolestarApi:
                 query,
                 operation_name=operation_name,
                 variable_values=variable_values,
-                extra_args={
-                    "headers": {
-                        "Authorization": f"Bearer {self.auth.access_token}",
-                        **(headers or {}),
-                    }
-                },
+                extra_args={"headers": headers},
             )
         except TransportQueryError as exc:
             self.logger.debug("GraphQL TransportQueryError: %s", str(exc))
