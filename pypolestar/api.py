@@ -49,6 +49,7 @@ class PolestarApi:
         client_session: httpx.AsyncClient | None = None,
         vins: list[str] | None = None,
         unique_id: str | None = None,
+        public_api_key: str | None = None,
     ) -> None:
         """Initialize the Polestar API."""
         self.client_session = client_session or httpx.AsyncClient()
@@ -63,6 +64,8 @@ class PolestarApi:
 
         self.api_url = API_MYSTAR_V2_URL
         self.api_url_public = API_MYSTAR_PUBLIC_URL
+
+        self.public_api_key = public_api_key or API_MYSTAR_PUBLIC_API_KEY
 
         self.gql_client = get_gql_client(url=self.api_url, client=self.client_session)
         self.gql_client_public = get_gql_client(url=self.api_url_public, client=self.client_session)
@@ -257,7 +260,7 @@ class PolestarApi:
                 "modelYear": model_year,
             },
             gql_session=self.gql_session_public,
-            headers={"x-api-key": API_MYSTAR_PUBLIC_API_KEY},
+            headers={"x-api-key": self.public_api_key},
         )
 
         if result[CAR_IMAGES] is None:
