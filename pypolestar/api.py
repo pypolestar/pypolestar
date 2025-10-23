@@ -162,7 +162,7 @@ class PolestarApi:
         Args:
             vin: The vehicle identification number
         Returns:
-            CarImages if data exists, None otherwise
+            CarImagesData if data exists, None otherwise
         Raises:
             KeyError: If the VIN doesn't exist
             ValueError: If data conversion fails
