@@ -348,3 +348,38 @@ class CarTelematicsData(CarBaseInformation):
             odometer=(CarOdometerData.from_dict(odometer) if isinstance(odometer, dict) else None),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )
+
+
+@dataclass(frozen=True)
+class CarImage:
+    url: str
+    angle: int
+
+
+@dataclass(frozen=True)
+class CarImagesData(CarBaseInformation):
+    transparent: list[CarImage]
+    opaque: list[CarImage]
+
+    def get_image_url_by_angle(self, angle: int, transparent: bool = False) -> str | None:
+        for img in self.transparent if transparent else self.opaque:
+            if img.angle == angle:
+                return img.url
+        return None
+
+    @classmethod
+    def from_dict(cls, data: GqlDict) -> Self:
+        if not isinstance(data, dict):
+            raise TypeError
+
+        return cls(
+            transparent=[
+                CarImage(url=img["url"], angle=img["angle"])
+                for img in data.get("transparent", [])
+                if isinstance(img, dict)
+            ],
+            opaque=[
+                CarImage(url=img["url"], angle=img["angle"]) for img in data.get("opaque", []) if isinstance(img, dict)
+            ],
+            _received_timestamp=datetime.now(tz=timezone.utc),
+        )

@@ -4,6 +4,7 @@ CAR_INFO_DATA = "getConsumerCarsV2"
 ODO_METER_DATA = "getOdometerData"
 BATTERY_DATA = "getBatteryData"
 TELEMATICS_DATA = "carTelematicsV2"
+CAR_IMAGES_DATA = "getCarImages"
 
 HTTPX_TIMEOUT = 30
 TOKEN_REFRESH_WINDOW_MIN = 300
@@ -18,3 +19,5 @@ OIDC_SCOPE = "openid profile email customer:attributes"
 OIDC_COOKIES = ["PF", "PF.PERSISTENT"]
 
 API_MYSTAR_V2_URL = "https://pc-api.polestar.com/eu-north-1/mystar-v2/"
+API_MYSTAR_PUBLIC_URL = "https://pc-api.polestar.com/eu-north-1/mystar-public/"
+API_MYSTAR_PUBLIC_API_KEY = "da2-js63uvc7c5hwpdudt657d5lyou"
