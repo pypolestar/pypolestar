@@ -262,9 +262,9 @@ class PolestarApi:
             public_api=True,
         )
 
-        if not result[CAR_IMAGES_DATA]:
+        if not result.get(CAR_IMAGES_DATA):
             self.logger.exception("No car images found")
-            raise PolestarNoDataException("No cars images found")
+            raise PolestarNoDataException("No car images found")
 
         return result[CAR_IMAGES_DATA]
 
