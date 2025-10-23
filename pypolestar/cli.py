@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import json
 import logging
+import os
 from getpass import getpass
 
 from . import PolestarApi
@@ -33,10 +34,11 @@ async def async_main():
     else:
         logging.basicConfig(level=logging.INFO)
 
-    username = args.username or input("Polestar ID: ")
-    password = getpass("Password: ")
+    if not (username := args.username or os.getenv("POLESTAR_USERNAME") or input("Polestar ID: ")):
+        logging.error("Empty username provided")
+        raise SystemExit(1)
 
-    if not password:
+    if not (password := os.getenv("POLESTAR_PASSWORD") or getpass("Password: ")):
         logging.error("Empty password provided")
         raise SystemExit(1)
 
