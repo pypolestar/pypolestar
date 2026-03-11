@@ -60,12 +60,9 @@ QUERY_GET_CONSUMER_CARS_V2 = gql(
             vin
             internalVehicleIdentifier
             registrationNo
+            modelYear
             content {
                 model { name }
-                specification {
-                    battery
-                    torque
-                }
             }
         }
     }

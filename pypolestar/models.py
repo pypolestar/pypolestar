@@ -5,14 +5,7 @@ from enum import StrEnum
 from functools import cached_property
 from typing import Any, Self
 
-from .utils import (
-    GqlDict,
-    get_field_name_date,
-    get_field_name_datetime,
-    get_field_name_int,
-    get_field_name_str,
-    get_field_name_timestamp,
-)
+from .utils import GqlDict, get_field_name_int, get_field_name_str, get_field_name_timestamp
 
 
 class StrEnumOptional(StrEnum):
@@ -126,17 +119,20 @@ class CarBatteryInformationData:
 
 @dataclass(frozen=True)
 class CarInformationData(CarBaseInformation):
-    vin: str | None
-    internal_vehicle_identifier: str | None
-    registration_no: str | None
-    registration_date: date | None
-    factory_complete_date: date | None
-    model_name: str | None
-    image_url: str | None
-    battery: str | None
-    torque: str | None
-    software_version: str | None
-    software_version_timestamp: datetime | None
+    vin: str | None = None
+    internal_vehicle_identifier: str | None = None
+    registration_no: str | None = None
+    model_name: str | None = None
+    model_year: str | None = None
+    image_url: str | None = None
+
+    # Deprecated fields - to be removed in future versions
+    registration_date: date | None = None
+    factory_complete_date: date | None = None
+    battery: str | None = None
+    torque: str | None = None
+    software_version: str | None = None
+    software_version_timestamp: datetime | None = None
 
     _TORQUE_PATTERN = re.compile(r"(\d+)(?:\s*Nm|\s*N·m|\s*N⋅m)", re.IGNORECASE)
 
@@ -164,14 +160,9 @@ class CarInformationData(CarBaseInformation):
             vin=get_field_name_str("vin", data),
             internal_vehicle_identifier=get_field_name_str("internalVehicleIdentifier", data),
             registration_no=get_field_name_str("registrationNo", data),
-            registration_date=get_field_name_date("registrationDate", data),
-            factory_complete_date=get_field_name_date("factoryCompleteDate", data),
             model_name=model_name,
+            model_year=get_field_name_str("modelYear", data),
             image_url=None,
-            battery=get_field_name_str("content/specification/battery", data),
-            torque=get_field_name_str("content/specification/torque", data),
-            software_version=get_field_name_str("software/version", data),
-            software_version_timestamp=get_field_name_datetime("software/versionTimestamp", data),
             _received_timestamp=datetime.now(tz=timezone.utc),
         )
 
