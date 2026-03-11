@@ -124,7 +124,6 @@ class CarInformationData(CarBaseInformation):
     registration_no: str | None = None
     model_name: str | None = None
     model_year: str | None = None
-    image_url: str | None = None
 
     # Deprecated fields - to be removed in future versions
     registration_date: date | None = None
@@ -133,6 +132,7 @@ class CarInformationData(CarBaseInformation):
     torque: str | None = None
     software_version: str | None = None
     software_version_timestamp: datetime | None = None
+    image_url: str | None = None
 
     _TORQUE_PATTERN = re.compile(r"(\d+)(?:\s*Nm|\s*N·m|\s*N⋅m)", re.IGNORECASE)
 
