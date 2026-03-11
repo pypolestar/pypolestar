@@ -60,8 +60,6 @@ QUERY_GET_CONSUMER_CARS_V2 = gql(
             vin
             internalVehicleIdentifier
             registrationNo
-            registrationDate
-            factoryCompleteDate
             content {
                 model { name }
                 specification {
