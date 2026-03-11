@@ -3,21 +3,11 @@
     "vin": "AAAAAAAA1AA111111",
     "internalVehicleIdentifier": "88888888-aaaa-bbbb-cccc-aaa11aaa1111",
     "registrationNo": "AA-00-AA",
-    "registrationDate": "2023-08-01",
-    "factoryCompleteDate": "2023-05-20",
     "modelYear": "0000",
     "content": {
       "model": {
         "name": "Polestar 2"
-      },
-      "specification": {
-        "battery": "82 kWh",
-        "torque": "490 Nm / 361 lb-ft"
       }
-    },
-    "software": {
-      "version": "P03.01",
-      "versionTimestamp": "2024-07-11 19:51:55"
     }
   },
   "getOdometerData": {
