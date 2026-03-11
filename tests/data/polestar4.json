@@ -5,6 +5,7 @@
     "registrationNo": "MLB007",
     "registrationDate": null,
     "factoryCompleteDate": "2024-07-11",
+    "modelYear": "0000",
     "content": {
       "model": {
         "name": "Polestar4"
