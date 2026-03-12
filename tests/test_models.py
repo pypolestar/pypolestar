@@ -1,5 +1,5 @@
 import json
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -55,15 +55,8 @@ def test_car_information_data_polestar2(polestar2_test_data):
     assert data.vin == "AAAAAAAA1AA111111"
     assert data.internal_vehicle_identifier == "88888888-aaaa-bbbb-cccc-aaa11aaa1111"
     assert data.registration_no == "AA-00-AA"
-    assert data.registration_date == date(year=2023, month=8, day=1)
-    assert data.factory_complete_date == date(year=2023, month=5, day=20)
     assert data.model_name == "Polestar 2"
-    assert data.image_url is None
-    assert data.battery == "82 kWh"
-    assert data.torque == "490 Nm / 361 lb-ft"
-    assert data.software_version == "P03.01"
-    assert data.battery_information == CarBatteryInformationData(capacity=82, voltage=None, modules=None, cells=None)
-    assert data.torque_nm == 490
+    assert data.model_year == "0000"
 
 
 def test_car_information_data_polestar3(polestar3_test_data):
@@ -74,15 +67,8 @@ def test_car_information_data_polestar3(polestar3_test_data):
     assert data.vin == "YSMYKEAE7RB000000"
     assert data.internal_vehicle_identifier == "1aaeb452-700e-46f3-9899-395b6219c8a6"
     assert data.registration_no == "MLB007"
-    assert data.registration_date is None
-    assert data.factory_complete_date == date(year=2024, month=4, day=16)
     assert data.model_name == "Polestar 3"
-    assert data.image_url is None
-    assert data.battery == "400V lithium-ion battery, 111 kWh capacity, 17 modules"
-    assert data.torque == "840 Nm / 620 lbf-ft"
-    assert data.software_version is None
-    assert data.battery_information == CarBatteryInformationData(capacity=111, voltage=400, modules=17, cells=None)
-    assert data.torque_nm == 840
+    assert data.model_year == "0000"
 
 
 def test_car_information_data_polestar4(polestar4_test_data):
@@ -93,15 +79,8 @@ def test_car_information_data_polestar4(polestar4_test_data):
     assert data.vin == "XXXXXXXXXXX000000"
     assert data.internal_vehicle_identifier == "cf4bfecc-cb00-49f3-af84-4a5b21b02da6"
     assert data.registration_no == "MLB007"
-    assert data.registration_date is None
-    assert data.factory_complete_date == date(year=2024, month=7, day=11)
     assert data.model_name == "Polestar 4"
-    assert data.image_url is None
-    assert data.battery == "400Vlithium-ionbattery,100kWhcapacity,cell-to-pack,110cells"
-    assert data.torque == "343Nm/253lbf-ft"
-    assert data.software_version is None
-    assert data.battery_information == CarBatteryInformationData(capacity=100, voltage=400, modules=None, cells=110)
-    assert data.torque_nm == 343
+    assert data.model_year == "0000"
 
 
 def test_car_battery_information_data():

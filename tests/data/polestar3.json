@@ -3,20 +3,11 @@
     "vin": "YSMYKEAE7RB000000",
     "internalVehicleIdentifier": "1aaeb452-700e-46f3-9899-395b6219c8a6",
     "registrationNo": "MLB007",
-    "registrationDate": null,
-    "factoryCompleteDate": "2024-04-16",
+    "modelYear": "0000",
     "content": {
       "model": {
         "name": "Polestar 3"
-      },
-      "specification": {
-        "battery": "400V lithium-ion battery, 111 kWh capacity, 17 modules",
-        "torque": "840 Nm / 620 lbf-ft"
       }
-    },
-    "software": {
-      "version": null,
-      "versionTimestamp": null
     }
   },
   "carTelematicsV2": {

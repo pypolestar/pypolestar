@@ -19,13 +19,7 @@ from .exceptions import (
     PolestarNoDataException,
     PolestarNotAuthorizedException,
 )
-from .graphql import (
-    QUERY_GET_CONSUMER_CARS_V2,
-    QUERY_GET_CONSUMER_CARS_V2_VERBOSE,
-    QUERY_TELEMATICS_V2,
-    get_gql_client,
-    get_gql_session,
-)
+from .graphql import QUERY_GET_CONSUMER_CARS_V2, QUERY_TELEMATICS_V2, get_gql_client, get_gql_session
 from .models import CarInformationData, CarTelematicsData
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +53,9 @@ class PolestarApi:
     async def async_init(self, verbose: bool = False) -> None:
         """Initialize the Polestar API."""
 
+        if verbose:
+            self.logger.warning("Verbose mode no longer supported, ignoring verbose=True")
+
         await self.auth.async_init()
         await self.auth.get_token()
 
@@ -67,7 +64,7 @@ class PolestarApi:
 
         self.gql_session = await get_gql_session(self.gql_client)
 
-        if not (car_data := await self._get_all_vehicles_data(verbose=verbose)):
+        if not (car_data := await self._get_all_vehicles_data()):
             self.logger.warning("No cars found for %s", self.username)
             return
 
@@ -191,11 +188,11 @@ class PolestarApi:
 
         self.logger.debug("Received telematics data: %s", res)
 
-    async def _get_all_vehicles_data(self, verbose: bool = False) -> list[dict[str, Any]]:
+    async def _get_all_vehicles_data(self) -> list[dict[str, Any]]:
         """Get the all vehicle data from the Polestar API."""
 
         result = await self._query_graph_ql(
-            query=(QUERY_GET_CONSUMER_CARS_V2_VERBOSE if verbose else QUERY_GET_CONSUMER_CARS_V2),
+            query=QUERY_GET_CONSUMER_CARS_V2,
             variable_values={"locale": "en_GB"},
         )
 
