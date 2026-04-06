@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package pccs.chronos.entities.common.v1;
+
+message TimeZone {
+  string id = 1;
+}

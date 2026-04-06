@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package pccs.vehiclestates.services.battery.v1;
+
+import "battery.proto";
+
+// Reconstructed from Polestar Android APK v5.5.0 decompilation
+
+message GetBatteryRequest {
+  string id = 1;
+  string vin = 2;
+}
+
+message GetBatteryResponse {
+  string id = 1;
+  string vin = 2;
+  pccs.vehiclestates.entities.battery.v1.Battery battery = 3;
+}
+
+// gRPC service: pccs.vehiclestates.services.battery.v1.BatteryService
+// Methods: GetBattery (server streaming), GetLatestBattery (unary)
+service BatteryService {
+  rpc GetBattery(GetBatteryRequest) returns (stream GetBatteryResponse);
+  rpc GetLatestBattery(GetBatteryRequest) returns (GetBatteryResponse);
+}

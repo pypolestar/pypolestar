@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package pccs.chronos.services.v1;
+
+import "target_soc.proto";
+
+// Reconstructed from Polestar Android APK v5.5.0 decompilation
+// gRPC service: pccs.chronos.services.v1.TargetSocService
+
+service TargetSocService {
+  rpc GetTargetSoc(pccs.chronos.messages.targetsoc.v1.GetTargetSocRequest) returns (stream pccs.chronos.messages.targetsoc.v1.GetTargetSocResponse);
+  rpc SetTargetSoc(pccs.chronos.messages.targetsoc.v1.SetTargetSocRequest) returns (stream pccs.chronos.messages.targetsoc.v1.SetTargetSocResponse);
+}

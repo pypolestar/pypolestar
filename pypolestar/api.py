@@ -20,6 +20,7 @@ from .exceptions import (
     PolestarNotAuthorizedException,
 )
 from .graphql import QUERY_GET_CONSUMER_CARS_V2, QUERY_TELEMATICS_V2, get_gql_client, get_gql_session
+from .grpc_client import GrpcBatteryData, GrpcTargetSocData, PolestarGrpcClient
 from .models import CarInformationData, CarTelematicsData
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class PolestarApi:
         self.api_url = API_MYSTAR_V2_URL
         self.gql_client = get_gql_client(url=self.api_url, client=self.client_session)
         self.gql_session: AsyncClientSession | None = None
+        self.grpc_client = PolestarGrpcClient(unique_id=unique_id)
 
     async def async_init(self, verbose: bool = False) -> None:
         """Initialize the Polestar API."""
@@ -63,6 +65,12 @@ class PolestarApi:
             raise PolestarAuthException(f"No access token for {self.username}")
 
         self.gql_session = await get_gql_session(self.gql_client)
+
+        try:
+            await self.grpc_client.connect()
+            self.logger.debug("gRPC client connected")
+        except Exception as exc:
+            self.logger.warning("gRPC client connection failed (non-fatal): %s", exc)
 
         if not (car_data := await self._get_all_vehicles_data()):
             self.logger.warning("No cars found for %s", self.username)
@@ -81,6 +89,7 @@ class PolestarApi:
 
     async def async_logout(self) -> None:
         """Log out from Polestar API."""
+        await self.grpc_client.close()
         await self.auth.async_logout()
 
     def get_status_code(self) -> int | None:
@@ -133,11 +142,22 @@ class PolestarApi:
             except Exception as exc:
                 raise ValueError("Failed to convert car telematics data") from exc
 
+    def get_grpc_battery(self, vin: str) -> GrpcBatteryData | None:
+        """Get battery data from gRPC API (includes charger connection status, power, etc.)."""
+        self._ensure_data_for_vin(vin)
+        return self.data_by_vin[vin].get("grpc_battery")
+
+    def get_grpc_target_soc(self, vin: str) -> GrpcTargetSocData | None:
+        """Get target SOC (charge limit) from gRPC API."""
+        self._ensure_data_for_vin(vin)
+        return self.data_by_vin[vin].get("grpc_target_soc")
+
     async def update_latest_data(
         self,
         vin: str,
         update_vehicle: bool = False,
         update_telematics: bool = True,
+        update_grpc: bool = True,
     ) -> None:
         """Get the latest data from the Polestar API."""
 
@@ -158,6 +178,8 @@ class PolestarApi:
                     await self._update_vehicle_data(vin)
                 if update_telematics:
                     await self._update_telematics_data(vin)
+                if update_grpc and (self.grpc_client.c3_channel or self.grpc_client.pccs_channel):
+                    await self._update_grpc_data(vin)
 
                 t2 = time.perf_counter()
                 self.logger.debug("Update for VIN %s took %.3f seconds", vin, t2 - t1)
@@ -187,6 +209,26 @@ class PolestarApi:
         res = self.data_by_vin[vin][TELEMATICS_DATA] = result[TELEMATICS_DATA]
 
         self.logger.debug("Received telematics data: %s", res)
+
+    async def _update_grpc_data(self, vin: str) -> None:
+        """Get battery and target SOC data via gRPC."""
+        if not self.auth.access_token:
+            self.logger.warning("No access token for gRPC")
+            return
+
+        try:
+            battery = await self.grpc_client.get_battery(vin, self.auth.access_token)
+            self.data_by_vin[vin]["grpc_battery"] = battery
+            self.logger.debug("gRPC battery data: %s", battery)
+        except Exception as exc:
+            self.logger.warning("gRPC battery fetch failed: %s", exc)
+
+        try:
+            target_soc = await self.grpc_client.get_target_soc(vin, self.auth.access_token)
+            self.data_by_vin[vin]["grpc_target_soc"] = target_soc
+            self.logger.debug("gRPC target SOC data: %s", target_soc)
+        except Exception as exc:
+            self.logger.warning("gRPC target SOC fetch failed: %s", exc)
 
     async def _get_all_vehicles_data(self) -> list[dict[str, Any]]:
         """Get the all vehicle data from the Polestar API."""

@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package pccs.vehiclestates.entities.common.v1;
+
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}

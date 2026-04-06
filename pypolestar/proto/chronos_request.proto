@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package pccs.chronos.messages.common.v1;
+
+import "chronos_common.proto";
+
+message ChronosRequest {
+  string id = 1;
+  string vin = 2;
+  string source = 3;
+  pccs.chronos.entities.common.v1.TimeZone time_zone = 4;
+}
