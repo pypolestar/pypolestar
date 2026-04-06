@@ -1,0 +1,18 @@
+[Unit]
+Description=Polestar Prometheus Exporter
+After=network.target
+
+[Service]
+Type=simple
+User=emondjf
+Group=emondjf
+WorkingDirectory=/home/emondjf/sandbox/pypolestar/grpc
+EnvironmentFile=/home/emondjf/sandbox/pypolestar/grpc/.env
+Environment=PATH=/home/emondjf/.local/bin:/usr/local/bin:/usr/bin:/bin
+LoadCredentialEncrypted=polestar_password:/home/emondjf/sandbox/pypolestar/grpc/polestar_password.cred
+ExecStart=/home/emondjf/.local/bin/uv run python polestar_exporter.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

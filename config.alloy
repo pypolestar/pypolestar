@@ -1,0 +1,17 @@
+prometheus.scrape "polestar" {
+  targets = [
+    {"__address__" = "localhost:9876"},
+  ]
+  forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+  scrape_interval = "15s"
+}
+
+prometheus.remote_write "grafana_cloud" {
+  endpoint {
+    url = env("GRAFANA_CLOUD_PROM_URL")
+    basic_auth {
+      username = env("GRAFANA_CLOUD_PROM_USER")
+      password = env("GRAFANA_CLOUD_PROM_TOKEN")
+    }
+  }
+}
