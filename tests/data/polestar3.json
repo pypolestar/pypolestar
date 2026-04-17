@@ -4,14 +4,12 @@
     "internalVehicleIdentifier": "1aaeb452-700e-46f3-9899-395b6219c8a6",
     "registrationNo": "MLB007",
     "modelYear": "0000",
-    "content": {
-      "model": {
-        "name": "Polestar 3"
-      }
-    }
+    "modelName": "Polestar 3"
   },
   "carTelematicsV2": {
-    "health": [null],
+    "health": [
+      null
+    ],
     "battery": [
       {
         "vin": "YSMYKEAE7RB000000",
