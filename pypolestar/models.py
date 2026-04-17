@@ -152,7 +152,7 @@ class CarInformationData(CarBaseInformation):
             raise TypeError
 
         # "Polestar 4" is reported as "Polestar4"
-        model_name = get_field_name_str("content/model/name", data)
+        model_name = get_field_name_str("modelName", data)
         if match := re.match(r"^([A-Za-z]+)(\d+)$", model_name):
             model_name = " ".join([match.group(1), match.group(2)])
 
