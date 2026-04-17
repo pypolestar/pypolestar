@@ -13,7 +13,7 @@ dependencies = [
     "gql[httpx]>=3.5.2",
     "grpcio>=1.80.0",
     "httpx>=0.28.1",
-    "protobuf>=6.31.0",
+    "protobuf>=6.31.1",
 ]
 
 [project.urls]
@@ -45,6 +45,7 @@ dev = [
 [tool.ruff]
 line-length = 120
 required-version = ">=0.6.8"
+extend-exclude = ["pypolestar/proto"]
 
 [tool.ruff.lint]
 select = [

@@ -20,7 +20,8 @@ from .exceptions import (
     PolestarNotAuthorizedException,
 )
 from .graphql import QUERY_GET_CONSUMER_CARS_V2, QUERY_TELEMATICS_V2, get_gql_client, get_gql_session
-from .grpc_client import GrpcBatteryData, GrpcTargetSocData, PolestarGrpcClient
+from .grpc_client import PolestarGrpcClient
+from .grpc_models import GrpcBatteryData, GrpcTargetSocData
 from .models import CarInformationData, CarTelematicsData
 
 _LOGGER = logging.getLogger(__name__)

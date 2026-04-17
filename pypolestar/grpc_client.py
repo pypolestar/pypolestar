@@ -11,14 +11,21 @@ Protocol definitions reconstructed from Polestar Android app v5.5.0.
 
 import logging
 import uuid
-from dataclasses import dataclass
 from datetime import datetime, timezone
 
 import grpc
 import grpc.aio
 import httpx
 
-from .proto import battery_pb2, battery_service_pb2, target_soc_pb2, target_soc_service_pb2, chronos_request_pb2
+from .grpc_models import (
+    ChargeTargetLevelSettingType,
+    ChargingConnectionStatus,
+    ChargingStatus,
+    ChargingType,
+    GrpcBatteryData,
+    GrpcTargetSocData,
+)
+from .proto import battery_pb2, battery_service_pb2, chronos_request_pb2, target_soc_pb2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,65 +37,26 @@ GRPC_PORT = 443
 GRPC_TIMEOUT = 30
 
 
-@dataclass(frozen=True)
-class GrpcBatteryData:
-    """Battery data from the gRPC API (richer than GraphQL)."""
-    charger_connection_status: str | None
-    charging_status: str | None
-    battery_charge_level_percentage: float | None
-    estimated_distance_to_empty_km: int | None
-    estimated_charging_time_to_full_minutes: int | None
-    charging_power_watts: int | None
-    charging_current_amps: int | None
-    charging_voltage_volts: int | None
-    charging_type: str | None
-    average_energy_consumption_kwh_per_100km: float | None
-    estimated_charging_time_minutes_to_target_distance: int | None
-    estimated_charging_time_minutes_to_minimum_soc: int | None
-    timestamp: datetime | None
+def _connection_status(value: int) -> ChargingConnectionStatus:
+    name = battery_pb2.ChargerConnectionStatus.Name(value)
+    return ChargingConnectionStatus.get(name, ChargingConnectionStatus.CHARGER_CONNECTION_STATUS_UNSPECIFIED)
 
 
-@dataclass(frozen=True)
-class GrpcTargetSocData:
-    """Target SOC (charge limit) from the gRPC API."""
-    battery_charge_target_level: int | None
-    charge_target_level_setting_type: str | None
-    pending_battery_charge_target_level: int | None
-    pending_charge_target_level_setting_type: str | None
+def _charging_status(value: int) -> ChargingStatus:
+    name = battery_pb2.ChargingStatus.Name(value)
+    return ChargingStatus.get(name, ChargingStatus.CHARGING_STATUS_UNSPECIFIED)
 
 
-# Map protobuf enum values to human-readable strings
-_CONNECTION_STATUS_MAP = {
-    battery_pb2.CHARGER_CONNECTION_STATUS_UNSPECIFIED: "Unspecified",
-    battery_pb2.CHARGER_CONNECTION_STATUS_CONNECTED: "Connected",
-    battery_pb2.CHARGER_CONNECTION_STATUS_DISCONNECTED: "Disconnected",
-    battery_pb2.CHARGER_CONNECTION_STATUS_FAULT: "Fault",
-}
+def _charging_type(value: int) -> ChargingType:
+    name = battery_pb2.ChargingType.Name(value)
+    return ChargingType.get(name, ChargingType.CHARGING_TYPE_UNSPECIFIED)
 
-_CHARGING_STATUS_MAP = {
-    battery_pb2.CHARGING_STATUS_UNSPECIFIED: "Unspecified",
-    battery_pb2.CHARGING_STATUS_CHARGING: "Charging",
-    battery_pb2.CHARGING_STATUS_IDLE: "Idle",
-    battery_pb2.CHARGING_STATUS_DONE: "Done",
-    battery_pb2.CHARGING_STATUS_FAULT: "Fault",
-    battery_pb2.CHARGING_STATUS_SCHEDULED: "Scheduled",
-    battery_pb2.CHARGING_STATUS_DISCHARGING: "Discharging",
-    battery_pb2.CHARGING_STATUS_ERROR: "Error",
-    battery_pb2.CHARGING_STATUS_SMART_CHARGING: "Smart Charging",
-}
 
-_CHARGING_TYPE_MAP = {
-    battery_pb2.CHARGING_TYPE_UNSPECIFIED: "Unspecified",
-    battery_pb2.CHARGING_TYPE_AC: "AC",
-    battery_pb2.CHARGING_TYPE_DC: "DC",
-}
-
-_TARGET_SOC_TYPE_MAP = {
-    target_soc_pb2.CHARGE_TARGET_LEVEL_SETTING_TYPE_UNSPECIFIED: "Unspecified",
-    target_soc_pb2.DAILY: "Daily",
-    target_soc_pb2.LONG_TRIP: "Long Trip",
-    target_soc_pb2.CUSTOM: "Custom",
-}
+def _target_soc_setting_type(value: int) -> ChargeTargetLevelSettingType:
+    name = target_soc_pb2.ChargeTargetLevelSettingType.Name(value)
+    return ChargeTargetLevelSettingType.get(
+        name, ChargeTargetLevelSettingType.CHARGE_TARGET_LEVEL_SETTING_TYPE_UNSPECIFIED
+    )
 
 
 class PolestarGrpcClient:
@@ -167,26 +135,7 @@ class PolestarGrpcClient:
                 self.logger.warning("gRPC GetLatestBattery: no battery field in response")
                 return None
 
-            b = response.battery
-            ts = None
-            if b.HasField("timestamp"):
-                ts = datetime.fromtimestamp(b.timestamp.seconds, tz=timezone.utc)
-
-            return GrpcBatteryData(
-                charger_connection_status=_CONNECTION_STATUS_MAP.get(b.charger_connection_status, "Unknown"),
-                charging_status=_CHARGING_STATUS_MAP.get(b.charging_status, "Unknown"),
-                battery_charge_level_percentage=b.battery_charge_level_percentage,
-                estimated_distance_to_empty_km=b.estimated_distance_to_empty_km,
-                estimated_charging_time_to_full_minutes=b.estimated_charging_time_to_full_minutes,
-                charging_power_watts=b.charging_power_watts,
-                charging_current_amps=b.charging_current_amps,
-                charging_voltage_volts=b.charging_voltage_volts,
-                charging_type=_CHARGING_TYPE_MAP.get(b.charging_type, "Unknown"),
-                average_energy_consumption_kwh_per_100km=b.average_energy_consumption_kwh_per_100_km,
-                estimated_charging_time_minutes_to_target_distance=b.estimated_charging_time_minutes_to_target_distance,
-                estimated_charging_time_minutes_to_minimum_soc=b.estimated_charging_time_minutes_to_minimum_soc,
-                timestamp=ts,
-            )
+            return _parse_battery(response.battery)
 
         except grpc.aio.AioRpcError as exc:
             self.logger.error("gRPC GetLatestBattery failed: %s (code=%s)", exc.details(), exc.code())
@@ -223,28 +172,56 @@ class PolestarGrpcClient:
 
             self.logger.debug("gRPC GetTargetSoc response: %s", response)
 
-            target_level = None
-            target_type = None
-            pending_level = None
-            pending_type = None
-
-            if response.HasField("target_soc"):
-                ts = response.target_soc
-                target_level = ts.battery_charge_target_level or None
-                target_type = _TARGET_SOC_TYPE_MAP.get(ts.charge_target_level_setting_type, "Unknown")
-
-            if response.HasField("pending_target_soc"):
-                pts = response.pending_target_soc
-                pending_level = pts.battery_charge_target_level or None
-                pending_type = _TARGET_SOC_TYPE_MAP.get(pts.charge_target_level_setting_type, "Unknown")
-
-            return GrpcTargetSocData(
-                battery_charge_target_level=target_level,
-                charge_target_level_setting_type=target_type,
-                pending_battery_charge_target_level=pending_level,
-                pending_charge_target_level_setting_type=pending_type,
-            )
+            return _parse_target_soc(response)
 
         except grpc.aio.AioRpcError as exc:
             self.logger.error("gRPC GetTargetSoc failed: %s (code=%s)", exc.details(), exc.code())
             raise
+
+
+def _parse_battery(b: battery_pb2.Battery) -> GrpcBatteryData:
+    """Parse a Battery protobuf message into GrpcBatteryData."""
+    ts: datetime | None = None
+    if b.HasField("timestamp"):
+        ts = datetime.fromtimestamp(b.timestamp.seconds, tz=timezone.utc)
+
+    return GrpcBatteryData(
+        charger_connection_status=_connection_status(b.charger_connection_status),
+        charging_status=_charging_status(b.charging_status),
+        battery_charge_level_percentage=b.battery_charge_level_percentage,
+        estimated_distance_to_empty_km=b.estimated_distance_to_empty_km,
+        estimated_charging_time_to_full_minutes=b.estimated_charging_time_to_full_minutes,
+        charging_power_watts=b.charging_power_watts,
+        charging_current_amps=b.charging_current_amps,
+        charging_voltage_volts=b.charging_voltage_volts,
+        charging_type=_charging_type(b.charging_type),
+        average_energy_consumption_kwh_per_100km=b.average_energy_consumption_kwh_per_100_km,
+        estimated_charging_time_minutes_to_target_distance=b.estimated_charging_time_minutes_to_target_distance,
+        estimated_charging_time_minutes_to_minimum_soc=b.estimated_charging_time_minutes_to_minimum_soc,
+        timestamp=ts,
+    )
+
+
+def _parse_target_soc(response: target_soc_pb2.GetTargetSocResponse) -> GrpcTargetSocData:
+    """Parse a GetTargetSocResponse into GrpcTargetSocData."""
+    target_level: int | None = None
+    target_type = ChargeTargetLevelSettingType.CHARGE_TARGET_LEVEL_SETTING_TYPE_UNSPECIFIED
+    pending_level: int | None = None
+    pending_type = ChargeTargetLevelSettingType.CHARGE_TARGET_LEVEL_SETTING_TYPE_UNSPECIFIED
+
+    if response.HasField("target_soc"):
+        ts = response.target_soc
+        target_level = ts.battery_charge_target_level
+        target_type = _target_soc_setting_type(ts.charge_target_level_setting_type)
+
+    if response.HasField("pending_target_soc"):
+        pts = response.pending_target_soc
+        pending_level = pts.battery_charge_target_level
+        pending_type = _target_soc_setting_type(pts.charge_target_level_setting_type)
+
+    return GrpcTargetSocData(
+        battery_charge_target_level=target_level,
+        charge_target_level_setting_type=target_type,
+        pending_battery_charge_target_level=pending_level,
+        pending_charge_target_level_setting_type=pending_type,
+    )
