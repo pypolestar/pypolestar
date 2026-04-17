@@ -61,9 +61,7 @@ QUERY_GET_CONSUMER_CARS_V2 = gql(
             internalVehicleIdentifier
             registrationNo
             modelYear
-            content {
-                model { name }
-            }
+            modelName
         }
     }
     """
