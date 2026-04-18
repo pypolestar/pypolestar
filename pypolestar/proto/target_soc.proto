@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package pccs.chronos.messages.targetsoc.v1;
+
+import "chronos_request.proto";
+
+// Reconstructed from Polestar Android APK v5.5.0 decompilation
+
+enum ChargeTargetLevelSettingType {
+  CHARGE_TARGET_LEVEL_SETTING_TYPE_UNSPECIFIED = 0;
+  DAILY = 1;
+  LONG_TRIP = 2;
+  CUSTOM = 3;
+}
+
+message TargetSoc {
+  int32 battery_charge_target_level = 1;
+  ChargeTargetLevelSettingType charge_target_level_setting_type = 2;
+  int64 updated_at = 3;
+  string source = 4;
+  string id = 5;
+}
+
+message GetTargetSocRequest {
+  pccs.chronos.messages.common.v1.ChronosRequest request = 1;
+}
+
+message GetTargetSocResponse {
+  string id = 1;
+  string vin = 2;
+  TargetSoc target_soc = 3;
+  TargetSoc pending_target_soc = 4;
+  optional int64 updated_at = 5;
+}
+
+message SetTargetSocRequest {
+  pccs.chronos.messages.common.v1.ChronosRequest request = 1;
+  int32 battery_charge_target_level = 2;
+  ChargeTargetLevelSettingType charge_target_level_setting_type = 3;
+}
+
+message SetTargetSocResponse {
+  // Response fields - exact structure unknown
+  string id = 1;
+}
