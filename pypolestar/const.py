@@ -21,3 +21,5 @@ OIDC_COOKIES = ["PF", "PF.PERSISTENT"]
 API_MYSTAR_V2_URL = "https://pc-api.polestar.com/eu-north-1/mystar-v2/"
 API_MYSTAR_PUBLIC_URL = "https://pc-api.polestar.com/eu-north-1/mystar-public/"
 API_MYSTAR_PUBLIC_API_KEY = "da2-js63uvc7c5hwpdudt657d5lyou"
+
+API_MYSTAR_LOCALE = "en-GB"

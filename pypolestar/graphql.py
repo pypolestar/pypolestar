@@ -60,151 +60,14 @@ QUERY_GET_CONSUMER_CARS_V2 = gql(
             vin
             internalVehicleIdentifier
             registrationNo
-            registrationDate
-            factoryCompleteDate
-            content {
-                model { name }
-                specification {
-                    battery
-                    torque
-                }
-            }
-            software {
-                version
-                versionTimestamp
-            }
+            modelYear
+            modelName
             pno34
             structureWeek
-            modelYear
         }
     }
     """
 )
-
-QUERY_GET_CONSUMER_CARS_V2_VERBOSE = gql(
-    """
-    query GetConsumerCarsV2 {
-        getConsumerCarsV2 {
-            vin
-            internalVehicleIdentifier
-            salesType
-            currentPlannedDeliveryDate
-            market
-            originalMarket
-            pno34
-            modelYear
-            registrationNo
-            metaOrderNumber
-            factoryCompleteDate
-            registrationDate
-            deliveryDate
-            serviceHistory {
-                claimType
-                market
-                mileage
-                mileageUnit
-                operations { id code description quantity performedDate }
-                orderEndDate
-                orderNumber
-                orderStartDate
-                parts { id code description quantity performedDate }
-                statusDMS
-                symptomCode
-                vehicleAge
-                workshopId
-            }
-            content {
-                exterior { code name description excluded }
-                exteriorDetails { code name description excluded }
-                interior { code name description excluded }
-                performancePackage { code name description excluded }
-                performanceOptimizationSpecification {
-                    power { value unit }
-                    torqueMax { value unit }
-                    acceleration { value unit description }
-                }
-                wheels { code name description excluded }
-                plusPackage { code name description excluded }
-                pilotPackage { code name description excluded }
-                motor { name description excluded }
-                model { name code }
-                specification {
-                    battery
-                    bodyType
-                    brakes
-                    combustionEngine
-                    electricMotors
-                    performance
-                    suspension
-                    tireSizes
-                    torque
-                    totalHp
-                    totalKw
-                    trunkCapacity { label value }
-                }
-                dimensions {
-                    wheelbase { label value }
-                    groundClearanceWithPerformance { label value }
-                    groundClearanceWithoutPerformance { label value }
-                    dimensions { label value }
-                }
-                towbar { code name description excluded }
-            }
-            primaryDriver
-            primaryDriverRegistrationTimestamp
-            owners { id registeredAt information { polestarId ownerType } }
-            wltpNedcData {
-                wltpCO2Unit
-                wltpElecEnergyConsumption
-                wltpElecEnergyUnit
-                wltpElecRange
-                wltpElecRangeUnit
-                wltpWeightedCombinedCO2
-                wltpWeightedCombinedFuelConsumption
-                wltpWeightedCombinedFuelConsumptionUnit
-            }
-            energy {
-                elecRange
-                elecRangeUnit
-                elecEnergyConsumption
-                elecEnergyUnit
-                weightedCombinedCO2
-                weightedCombinedCO2Unit
-                weightedCombinedFuelConsumption
-                weightedCombinedFuelConsumptionUnit
-            }
-            fuelType drivetrain numberOfDoors numberOfSeats
-            motor { description code }
-            maxTrailerWeight { value unit }
-            curbWeight { value unit }
-            hasPerformancePackage numberOfCylinders cylinderVolume
-            cylinderVolumeUnit transmission numberOfGears structureWeek
-            software {
-                version
-                versionTimestamp
-                performanceOptimization { value description timestamp }
-            }
-            latestClaimStatus { mileage mileageUnit registeredDate vehicleAge }
-            internalCar { origin registeredAt }
-            edition
-            commonStatusPoint { code timestamp description }
-            brandStatus { code timestamp description }
-            intermediateDestinationCode partnerDestinationCode
-            features {
-                type
-                code
-                name
-                description
-                excluded
-                galleryImage { url alt }
-                thumbnail { url alt }
-            }
-            electricalEngineNumbers { number placement }
-        }
-    }
-    """
-)
-
 
 QUERY_TELEMATICS_V2 = gql(
     """
@@ -241,8 +104,8 @@ QUERY_TELEMATICS_V2 = gql(
 
 QUERY_GET_CAR_IMAGES = gql(
     """
-    query GetCarImages($pno34: String!, $structureWeek: String!, $modelYear: String!) {
-        getCarImages(pno34: $pno34, structureWeek: $structureWeek, modelYear: $modelYear)  {
+    query GetCarImages($pno34: String!, $structureWeek: String!, $modelYear: String!, $locale: String!) {
+        getCarImages(pno34: $pno34, structureWeek: $structureWeek, modelYear: $modelYear, locale: $locale)  {
             transparent {
                 url
                 angle

@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package pccs.vehiclestates.entities.battery.v1;
+
+import "common.proto";
+
+// Reconstructed from Polestar Android APK v5.5.0 decompilation
+// pccs.vehiclestates.entities.battery.v1.Battery
+
+enum ChargerConnectionStatus {
+  CHARGER_CONNECTION_STATUS_UNSPECIFIED = 0;
+  CHARGER_CONNECTION_STATUS_CONNECTED = 1;
+  CHARGER_CONNECTION_STATUS_DISCONNECTED = 2;
+  CHARGER_CONNECTION_STATUS_FAULT = 3;
+}
+
+enum ChargingStatus {
+  CHARGING_STATUS_UNSPECIFIED = 0;
+  CHARGING_STATUS_CHARGING = 1;
+  CHARGING_STATUS_IDLE = 2;
+  CHARGING_STATUS_DONE = 3;
+  CHARGING_STATUS_FAULT = 4;
+  CHARGING_STATUS_SCHEDULED = 5;
+  CHARGING_STATUS_DISCHARGING = 6;
+  CHARGING_STATUS_ERROR = 7;
+  CHARGING_STATUS_SMART_CHARGING = 8;
+}
+
+enum ChargingType {
+  CHARGING_TYPE_UNSPECIFIED = 0;
+  CHARGING_TYPE_AC = 1;
+  CHARGING_TYPE_DC = 2;
+}
+
+enum ChargerPowerStatus {
+  CHARGER_POWER_STATUS_UNSPECIFIED = 0;
+  // Exact values unknown - discovered field 26 from APK
+}
+
+message EnergyConsumptionPercentage {
+  double value = 1;
+}
+
+message EnergyConsumptionWh {
+  double value = 1;
+}
+
+message Battery {
+  pccs.vehiclestates.entities.common.v1.Timestamp timestamp = 1;
+  double battery_charge_level_percentage = 2;
+  double average_energy_consumption_kwh_per_100_km = 3;
+  int32 estimated_distance_to_empty_km = 4;
+  int32 estimated_charging_time_to_full_minutes = 5;
+  ChargerConnectionStatus charger_connection_status = 6;
+  ChargingStatus charging_status = 7;
+  int32 estimated_distance_to_empty_miles = 8;
+  int32 estimated_charging_time_minutes_to_target_distance = 9;
+  int32 charging_power_watts = 10;
+  int32 charging_current_amps = 11;
+  double average_energy_consumption_kwh_per_100_km_automatic = 12;
+  double average_energy_consumption_kwh_per_100_km_since_charge = 13;
+  double total_energy_consumption_wh = 14;
+  double total_energy_consumption_wh_automatic = 15;
+  double total_energy_consumption_wh_since_charge = 16;
+  ChargingType charging_type = 17;
+  int32 charging_voltage_volts = 18;
+  int32 estimated_charging_time_minutes_to_minimum_soc = 19;
+  EnergyConsumptionWh energy_consumption_wh_manual = 20;
+  EnergyConsumptionWh energy_consumption_wh_automatic = 21;
+  EnergyConsumptionWh energy_consumption_wh_since_charge = 22;
+  EnergyConsumptionPercentage energy_consumption_percentage_manual = 23;
+  EnergyConsumptionPercentage energy_consumption_percentage_automatic = 24;
+  EnergyConsumptionPercentage energy_consumption_percentage_since_charge = 25;
+  ChargerPowerStatus charger_power_status = 26;
+}

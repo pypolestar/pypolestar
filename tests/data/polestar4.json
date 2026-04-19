@@ -3,21 +3,8 @@
     "vin": "XXXXXXXXXXX000000",
     "internalVehicleIdentifier": "cf4bfecc-cb00-49f3-af84-4a5b21b02da6",
     "registrationNo": "MLB007",
-    "registrationDate": null,
-    "factoryCompleteDate": "2024-07-11",
-    "content": {
-      "model": {
-        "name": "Polestar4"
-      },
-      "specification": {
-        "battery": "400Vlithium-ionbattery,100kWhcapacity,cell-to-pack,110cells",
-        "torque": "343Nm/253lbf-ft"
-      }
-    },
-    "software": {
-      "version": null,
-      "versionTimestamp": null
-    }
+    "modelYear": "0000",
+    "modelName": "Polestar4"
   },
   "carTelematics": {
     "health": {
