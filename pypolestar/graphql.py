@@ -62,6 +62,8 @@ QUERY_GET_CONSUMER_CARS_V2 = gql(
             registrationNo
             modelYear
             modelName
+            pno34
+            structureWeek
         }
     }
     """
@@ -93,6 +95,24 @@ QUERY_TELEMATICS_V2 = gql(
                 vin
                 odometerMeters
                 timestamp { seconds nanos }
+            }
+        }
+    }
+    """
+)
+
+
+QUERY_GET_CAR_IMAGES = gql(
+    """
+    query GetCarImages($pno34: String!, $structureWeek: String!, $modelYear: String!, $locale: String!) {
+        getCarImages(pno34: $pno34, structureWeek: $structureWeek, modelYear: $modelYear, locale: $locale)  {
+            transparent {
+                url
+                angle
+            }
+            opaque {
+                url
+                angle
             }
         }
     }

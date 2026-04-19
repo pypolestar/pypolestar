@@ -9,6 +9,7 @@ from pypolestar.models import (
     CarBatteryData,
     CarBatteryInformationData,
     CarHealthData,
+    CarImagesData,
     CarInformationData,
     CarOdometerData,
     CarTelematicsData,
@@ -69,6 +70,14 @@ def test_car_information_data_polestar3(polestar3_test_data):
     assert data.registration_no == "MLB007"
     assert data.model_name == "Polestar 3"
     assert data.model_year == "0000"
+
+
+def test_car_images_polestar3(polestar3_test_data):
+    data = CarImagesData.from_dict(polestar3_test_data["getCarImages"])
+    assert (
+        data.get_image_url_by_angle(0)
+        == "https://car-images.polestar.com/359/2024/summary/EA/72300/001190/R80000/_/19/_/XPLUSS/_/1/_/default/0.jpg"
+    )
 
 
 def test_car_information_data_polestar4(polestar4_test_data):
