@@ -192,6 +192,8 @@ class PolestarApi:
     async def _update_vehicle_data(self, vin: str) -> None:
         """Get the latest vehicle data from the Polestar API."""
 
+        self.logger.debug("Updating vehicle data for VIN %s", vin)
+
         for data in await self._get_all_vehicles_data():
             if data["vin"] == vin:
                 self.logger.debug("Received vehicle data: %s", data)
@@ -203,6 +205,8 @@ class PolestarApi:
     async def _update_telematics_data(self, vin: str) -> None:
         """Get the latest telematics data from the Polestar API."""
 
+        self.logger.debug("Updating telematics data for VIN %s", vin)
+
         result = await self._query_graph_ql(
             query=QUERY_TELEMATICS_V2,
             variable_values={"vins": [vin]},
@@ -213,6 +217,9 @@ class PolestarApi:
 
     async def _update_grpc_data(self, vin: str) -> None:
         """Get battery and target SOC data via gRPC."""
+
+        self.logger.debug("Updating gRPC data for VIN %s", vin)
+
         if not self.auth.access_token:
             self.logger.warning("No access token for gRPC")
             return
