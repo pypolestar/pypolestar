@@ -52,6 +52,7 @@ class PolestarApi:
         vins: list[str] | None = None,
         unique_id: str | None = None,
         public_api_key: str | None = None,
+        enable_grpc: bool = True,
     ) -> None:
         """Initialize the Polestar API."""
 
@@ -76,11 +77,9 @@ class PolestarApi:
         self.gql_session_private: AsyncClientSession | None = None
         self.gql_session_public: AsyncClientSession | None = None
 
-        self.api_url = API_MYSTAR_V2_URL
-
-        self.gql_client = get_gql_client(url=self.api_url, client=self.client_session)
-        self.gql_session: AsyncClientSession | None = None
-        self.grpc_client = PolestarGrpcClient(unique_id=unique_id)
+        self.grpc_client = (
+            PolestarGrpcClient(client_session=self.client_session, unique_id=unique_id) if enable_grpc else None
+        )
 
     async def async_init(self, verbose: bool = False) -> None:
         """Initialize the Polestar API."""
@@ -97,11 +96,12 @@ class PolestarApi:
         self.gql_session_private = await get_gql_session(self.gql_client_private)
         self.gql_session_public = await get_gql_session(self.gql_client_public)
 
-        try:
-            await self.grpc_client.connect()
-            self.logger.debug("gRPC client connected")
-        except Exception as exc:
-            self.logger.warning("gRPC client connection failed (non-fatal): %s", exc)
+        if self.grpc_client:
+            try:
+                await self.grpc_client.connect()
+                self.logger.debug("gRPC client connected")
+            except Exception as exc:
+                self.logger.warning("gRPC client connection failed (non-fatal): %s", exc)
 
         if not (car_data := await self._get_all_vehicles_data()):
             self.logger.warning("No cars found for %s", self.username)
@@ -124,7 +124,8 @@ class PolestarApi:
 
     async def async_logout(self) -> None:
         """Log out from Polestar API."""
-        await self.grpc_client.close()
+        if self.grpc_client:
+            await self.grpc_client.close()
         await self.auth.async_logout()
 
     def get_status_code(self) -> int | None:
@@ -234,7 +235,7 @@ class PolestarApi:
                     await self._update_vehicle_data(vin)
                 if update_telematics:
                     await self._update_telematics_data(vin)
-                if update_grpc and (self.grpc_client.c3_channel or self.grpc_client.pccs_channel):
+                if update_grpc and self.grpc_client and (self.grpc_client.c3_channel or self.grpc_client.pccs_channel):
                     await self._update_grpc_data(vin)
 
                 t2 = time.perf_counter()
@@ -277,6 +278,10 @@ class PolestarApi:
 
         if not self.auth.access_token:
             self.logger.warning("No access token for gRPC")
+            return
+
+        if not self.grpc_client:
+            self.logger.warning("gRPC client not initialized")
             return
 
         try:
