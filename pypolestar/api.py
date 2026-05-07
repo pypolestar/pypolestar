@@ -76,7 +76,6 @@ class PolestarApi:
         self.gql_session_private: AsyncClientSession | None = None
         self.gql_session_public: AsyncClientSession | None = None
 
-        self.gql_session: AsyncClientSession | None = None
         self.grpc_client = PolestarGrpcClient(unique_id=unique_id)
 
     async def async_init(self, verbose: bool = False) -> None:
