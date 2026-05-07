@@ -12,17 +12,31 @@ from gql.transport.exceptions import TransportQueryError
 from graphql import DocumentNode
 
 from .auth import PolestarAuth
-from .const import API_MYSTAR_V2_URL, CAR_INFO_DATA, TELEMATICS_DATA
+from .const import (
+    API_MYSTAR_LOCALE,
+    API_MYSTAR_PUBLIC_API_KEY,
+    API_MYSTAR_PUBLIC_URL,
+    API_MYSTAR_V2_URL,
+    CAR_IMAGES_DATA,
+    CAR_INFO_DATA,
+    TELEMATICS_DATA,
+)
 from .exceptions import (
     PolestarApiException,
     PolestarAuthException,
     PolestarNoDataException,
     PolestarNotAuthorizedException,
 )
-from .graphql import QUERY_GET_CONSUMER_CARS_V2, QUERY_TELEMATICS_V2, get_gql_client, get_gql_session
+from .graphql import (
+    QUERY_GET_CAR_IMAGES,
+    QUERY_GET_CONSUMER_CARS_V2,
+    QUERY_TELEMATICS_V2,
+    get_gql_client,
+    get_gql_session,
+)
 from .grpc_client import PolestarGrpcClient
 from .grpc_models import GrpcBatteryData, GrpcTargetSocData
-from .models import CarInformationData, CarTelematicsData
+from .models import CarImagesData, CarInformationData, CarTelematicsData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,8 +51,10 @@ class PolestarApi:
         client_session: httpx.AsyncClient | None = None,
         vins: list[str] | None = None,
         unique_id: str | None = None,
+        public_api_key: str | None = None,
     ) -> None:
         """Initialize the Polestar API."""
+
         self.client_session = client_session or httpx.AsyncClient()
         self.username = username
         self.auth = PolestarAuth(username, password, self.client_session, unique_id)
@@ -48,7 +64,20 @@ class PolestarApi:
         self.configured_vins = set(vins) if vins else None
         self.available_vins: set[str] = set()
         self.logger = _LOGGER.getChild(unique_id) if unique_id else _LOGGER
+
+        self.api_url_private = API_MYSTAR_V2_URL
+        self.api_url_public = API_MYSTAR_PUBLIC_URL
+
+        self.public_api_key = public_api_key or API_MYSTAR_PUBLIC_API_KEY
+
+        self.gql_client_private = get_gql_client(url=self.api_url_private, client=self.client_session)
+        self.gql_client_public = get_gql_client(url=self.api_url_public, client=self.client_session)
+
+        self.gql_session_private: AsyncClientSession | None = None
+        self.gql_session_public: AsyncClientSession | None = None
+
         self.api_url = API_MYSTAR_V2_URL
+
         self.gql_client = get_gql_client(url=self.api_url, client=self.client_session)
         self.gql_session: AsyncClientSession | None = None
         self.grpc_client = PolestarGrpcClient(unique_id=unique_id)
@@ -65,7 +94,8 @@ class PolestarApi:
         if self.auth.access_token is None:
             raise PolestarAuthException(f"No access token for {self.username}")
 
-        self.gql_session = await get_gql_session(self.gql_client)
+        self.gql_session_private = await get_gql_session(self.gql_client_private)
+        self.gql_session_public = await get_gql_session(self.gql_client_public)
 
         try:
             await self.grpc_client.connect()
@@ -82,6 +112,10 @@ class PolestarApi:
             if self.configured_vins and vin not in self.configured_vins:
                 continue
             self.data_by_vin[vin][CAR_INFO_DATA] = data
+            try:
+                self.data_by_vin[vin][CAR_IMAGES_DATA] = await self._get_car_images(vin)
+            except Exception as exc:
+                self.logger.warning("Failed to get car images for VIN %s: %s", vin, exc)
             self.available_vins.add(vin)
             self.logger.debug("API setup for VIN %s", vin)
 
@@ -142,6 +176,27 @@ class PolestarApi:
                 return CarTelematicsData.from_dict(data, vin)
             except Exception as exc:
                 raise ValueError("Failed to convert car telematics data") from exc
+
+    def get_car_images(self, vin: str) -> CarImagesData | None:
+        """
+        Get car images for the specified VIN.
+
+        Args:
+            vin: The vehicle identification number
+        Returns:
+            CarImagesData if data exists, None otherwise
+        Raises:
+            KeyError: If the VIN doesn't exist
+            ValueError: If data conversion fails
+        """
+
+        self._ensure_data_for_vin(vin)
+
+        if data := self.data_by_vin[vin].get(CAR_IMAGES_DATA):
+            try:
+                return CarImagesData.from_dict(data)
+            except Exception as exc:
+                raise ValueError("Failed to convert car images data") from exc
 
     def get_grpc_battery(self, vin: str) -> GrpcBatteryData | None:
         """Get battery data from gRPC API (includes charger connection status, power, etc.)."""
@@ -243,7 +298,7 @@ class PolestarApi:
 
         result = await self._query_graph_ql(
             query=QUERY_GET_CONSUMER_CARS_V2,
-            variable_values={"locale": "en_GB"},
+            variable_values={"locale": API_MYSTAR_LOCALE},
         )
 
         if result[CAR_INFO_DATA] is None or len(result[CAR_INFO_DATA]) == 0:
@@ -251,6 +306,30 @@ class PolestarApi:
             raise PolestarNoDataException("No cars found in account")
 
         return result[CAR_INFO_DATA]
+
+    async def _get_car_images(self, vin: str) -> dict[str, Any]:
+        """Get the car images data from the Polestar API."""
+
+        pno34 = self.data_by_vin[vin][CAR_INFO_DATA]["pno34"]
+        structure_week = self.data_by_vin[vin][CAR_INFO_DATA]["structureWeek"]
+        model_year = self.data_by_vin[vin][CAR_INFO_DATA]["modelYear"]
+
+        result = await self._query_graph_ql(
+            query=QUERY_GET_CAR_IMAGES,
+            variable_values={
+                "pno34": pno34,
+                "structureWeek": structure_week,
+                "modelYear": model_year,
+                "locale": API_MYSTAR_LOCALE,
+            },
+            public_api=True,
+        )
+
+        if not result.get(CAR_IMAGES_DATA):
+            self.logger.exception("No car images found")
+            raise PolestarNoDataException("No car images found")
+
+        return result[CAR_IMAGES_DATA]
 
     def _ensure_data_for_vin(self, vin: str) -> None:
         """Ensure we have data for given VIN"""
@@ -266,18 +345,26 @@ class PolestarApi:
         query: DocumentNode,
         operation_name: str | None = None,
         variable_values: dict[str, Any] | None = None,
+        public_api: bool = False,
     ):
-        if self.gql_session is None:
+        """Execute a GraphQL query against the Polestar API."""
+
+        if public_api:
+            gql_session = self.gql_session_public
+            headers = {"x-api-key": self.public_api_key}
+        else:
+            gql_session = self.gql_session_private
+            headers = {"Authorization": f"Bearer {self.auth.access_token}"}
+
+        if gql_session is None:
             raise RuntimeError("GraphQL not connected")
 
-        self.logger.debug("GraphQL URL: %s", self.api_url)
-
         try:
-            result = await self.gql_session.execute(
+            result = await gql_session.execute(
                 query,
                 operation_name=operation_name,
                 variable_values=variable_values,
-                extra_args={"headers": {"Authorization": f"Bearer {self.auth.access_token}"}},
+                extra_args={"headers": headers},
             )
         except TransportQueryError as exc:
             self.logger.debug("GraphQL TransportQueryError: %s", str(exc))
