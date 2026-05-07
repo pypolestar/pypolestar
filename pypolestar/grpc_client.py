@@ -62,7 +62,8 @@ def _target_soc_setting_type(value: int) -> ChargeTargetLevelSettingType:
 class PolestarGrpcClient:
     """Client for the Polestar gRPC API (cnepmob.volvocars.com)."""
 
-    def __init__(self, unique_id: str | None = None):
+    def __init__(self, client_session: httpx.AsyncClient, unique_id: str | None = None):
+        self.client_session = client_session
         self.c3_channel: grpc.aio.Channel | None = None
         self.pccs_channel: grpc.aio.Channel | None = None
         self.logger = _LOGGER.getChild(unique_id) if unique_id else _LOGGER
@@ -83,18 +84,17 @@ class PolestarGrpcClient:
 
     async def _discover_c3_host(self) -> tuple[str, int]:
         """Discover the C3 gRPC host via the cnepmob discovery endpoint."""
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                C3_DISCOVERY_URL,
-                headers={"Accept": "application/volvo.cloud.cnepmob.v1+json"},
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            c3 = data["c3"]
-            host = c3["grpcHost"]
-            port = c3["grpcPort"]
-            self.logger.debug("C3 gRPC discovered: %s:%d", host, port)
-            return host, port
+        resp = await self.client_session.get(
+            C3_DISCOVERY_URL,
+            headers={"Accept": "application/volvo.cloud.cnepmob.v1+json"},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        c3 = data["c3"]
+        host = c3["grpcHost"]
+        port = c3["grpcPort"]
+        self.logger.debug("C3 gRPC discovered: %s:%d", host, port)
+        return host, port
 
     async def close(self) -> None:
         """Close the gRPC channels."""

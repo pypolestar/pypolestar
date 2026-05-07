@@ -52,7 +52,7 @@ class PolestarApi:
         vins: list[str] | None = None,
         unique_id: str | None = None,
         public_api_key: str | None = None,
-        enable_grpc: bool = False,
+        enable_grpc: bool = True,
     ) -> None:
         """Initialize the Polestar API."""
 
@@ -77,7 +77,9 @@ class PolestarApi:
         self.gql_session_private: AsyncClientSession | None = None
         self.gql_session_public: AsyncClientSession | None = None
 
-        self.grpc_client = PolestarGrpcClient(unique_id=unique_id) if enable_grpc else None
+        self.grpc_client = (
+            PolestarGrpcClient(client_session=self.client_session, unique_id=unique_id) if enable_grpc else None
+        )
 
     async def async_init(self, verbose: bool = False) -> None:
         """Initialize the Polestar API."""
