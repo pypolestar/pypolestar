@@ -76,9 +76,6 @@ class PolestarApi:
         self.gql_session_private: AsyncClientSession | None = None
         self.gql_session_public: AsyncClientSession | None = None
 
-        self.api_url = API_MYSTAR_V2_URL
-
-        self.gql_client = get_gql_client(url=self.api_url, client=self.client_session)
         self.gql_session: AsyncClientSession | None = None
         self.grpc_client = PolestarGrpcClient(unique_id=unique_id)
 
