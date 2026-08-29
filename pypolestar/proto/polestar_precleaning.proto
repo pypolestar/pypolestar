@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package services.vehiclestates.precleaning;
+
+// Cabin air pre-cleaning ("CleanZone") status. Field layout cross-referenced
+// from public reverse-engineering projects. Spot-checked live against a real
+// vehicle (parked, idle) with a plausible, internally consistent result.
+
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
+
+message PreCleaning {
+  Timestamp timestamp = 1;
+  Timestamp last_cycle_completed = 2;
+  Timestamp measurement_date = 3;
+  Timestamp started_at = 4;
+  Timestamp ending_at = 5;
+  RunningStatus running_status = 6;
+  StartReason start_reason = 7;
+  bool last_cycle_valid = 8;
+  int32 measured_air_quality_index = 9;
+  int32 measured_particulate_matter_25 = 10;
+  int32 runtime_left_minutes = 11;
+  ErrorType error = 13;
+}
+
+enum ErrorType {
+  ERROR_TYPE_UNSPECIFIED = 0;
+  ERROR_TYPE_GENERIC_ERROR = 1;
+  ERROR_TYPE_INTERRUPTED = 2;
+}
+
+enum StartReason {
+  START_REASON_UNSPECIFIED = 0;
+  START_REASON_REMOTE = 1;
+  START_REASON_MANUALLY_FROM_CAR = 2;
+}
+
+enum RunningStatus {
+  RUNNING_STATUS_UNSPECIFIED = 0;
+  RUNNING_STATUS_ON = 1;
+  RUNNING_STATUS_OFF = 2;
+  RUNNING_STATUS_PENDING = 3;
+}

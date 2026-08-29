@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package services.vehiclestates.exterior;
+
+// Field layout cross-referenced from multiple independent public
+// reverse-engineering projects (extracted from official Polestar/Volvo app
+// reflection metadata), not from pypolestar's own decompilation. Spot-
+// checked live: a real vehicle correctly reported fully locked and closed
+// while parked.
+
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
+
+message Exterior {
+  Timestamp timestamp = 1;
+  LockStatus central_lock = 2;
+  OpenStatus front_left_door = 3;
+  OpenStatus front_right_door = 4;
+  OpenStatus rear_left_door = 5;
+  OpenStatus rear_right_door = 6;
+  OpenStatus front_left_window = 7;
+  OpenStatus front_right_window = 8;
+  OpenStatus rear_left_window = 9;
+  OpenStatus rear_right_window = 10;
+  OpenStatus hood = 11;
+  OpenStatus tailgate = 12;
+  OpenStatus tank_lid = 13;
+  OpenStatus sunroof = 14;
+  AlarmStatus alarm = 15;
+  LockStatus tailgate_lock = 16;
+}
+
+enum LockStatus {
+  LOCK_STATUS_UNSPECIFIED = 0;
+  LOCK_STATUS_UNLOCKED = 1;
+  LOCK_STATUS_LOCKED = 2;
+}
+
+enum OpenStatus {
+  OPEN_STATUS_UNSPECIFIED = 0;
+  OPEN_STATUS_OPEN = 1;
+  OPEN_STATUS_CLOSED = 2;
+  OPEN_STATUS_AJAR = 3;
+}
+
+enum AlarmStatus {
+  ALARM_STATUS_UNSPECIFIED = 0;
+  ALARM_STATUS_IDLE = 1;
+  ALARM_STATUS_TRIGGERED = 2;
+}

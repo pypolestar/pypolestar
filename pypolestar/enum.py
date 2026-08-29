@@ -35,6 +35,8 @@ class BrakeFluidLevelWarning(StrEnumOptional):
     BRAKE_FLUID_LEVEL_WARNING_NO_WARNING = "No Warning"
     BRAKE_FLUID_LEVEL_WARNING_UNSPECIFIED = "Unspecified"
     BRAKE_FLUID_LEVEL_WARNING_TOO_LOW = "Too Low"
+    # Only reported by the gRPC HealthService, not the GraphQL health query.
+    BRAKE_FLUID_LEVEL_WARNING_CRITICALLY_LOW = "Critically Low"
 
 
 class EngineCoolantLevelWarning(StrEnumOptional):
@@ -61,6 +63,12 @@ class ServiceWarning(StrEnumOptional):
     SERVICE_WARNING_DISTANCE_DRIVEN_TIME_FOR_SERVICE = "Distance Driven Time For Service"
     SERVICE_WARNING_REGULAR_MAINTENANCE_OVERDUE_FOR_SERVICE = "Regular Maintenance Overdue For Service"
     SERVICE_WARNING_DISTANCE_DRIVEN_OVERDUE_FOR_SERVICE = "Distance Driven Overdue For Service"
+    # Only reported by the gRPC HealthService, not the GraphQL health query
+    # (combustion/hybrid "engine hours" variants and a generic unknown state).
+    SERVICE_WARNING_UNKNOWN_WARNING = "Unknown Warning"
+    SERVICE_WARNING_ENGINE_HOURS_ALMOST_TIME_FOR_SERVICE = "Engine Hours Almost Time For Service"
+    SERVICE_WARNING_ENGINE_HOURS_TIME_FOR_SERVICE = "Engine Hours Time For Service"
+    SERVICE_WARNING_ENGINE_HOURS_OVERDUE_FOR_SERVICE = "Engine Hours Overdue For Service"
 
 
 class ChargingType(StrEnumOptional):

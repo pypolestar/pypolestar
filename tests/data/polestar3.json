@@ -4,7 +4,9 @@
     "internalVehicleIdentifier": "1aaeb452-700e-46f3-9899-395b6219c8a6",
     "registrationNo": "MLB007",
     "modelYear": "0000",
-    "modelName": "Polestar 3"
+    "modelName": "Polestar 3",
+    "pno34": "35AAB2",
+    "structureWeek": "2318"
   },
   "getCarImages": {
     "transparent": [

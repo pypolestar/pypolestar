@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package pccs.chronos.messages.amplimit.v1;
+
+import "polestar_chronos_request.proto";
+
+// Charging current limit. Live-tested against a real account: the response
+// envelope is structurally identical to the proven polestar_target_soc.proto
+// GetTargetSocResponse (id/vin/reading{value,updated_at,source,id}/updated_at),
+// which is the strongest evidence for this shape -- Polestar's PCCS chronos
+// services clearly share one settings-envelope convention. The captured
+// `value` (20) is a plausible AC charging current in amps, but has not been
+// cross-checked against the account's actual configured limit.
+
+message AmpLimitReading {
+  int32 value = 1;
+  int64 updated_at = 2;
+  string source = 3;
+  string id = 4;
+}
+
+message GetAmpLimitRequest {
+  pccs.chronos.messages.common.v1.ChronosRequest request = 1;
+}
+
+message GetAmpLimitResponse {
+  string id = 1;
+  string vin = 2;
+  AmpLimitReading amp_limit = 3;
+  // Mirrors GetTargetSocResponse's pending_target_soc slot (field 4); never
+  // observed populated, so unconfirmed, but included by analogy since it's
+  // free (proto3 fields are optional and this costs nothing if never set).
+  AmpLimitReading pending_amp_limit = 4;
+  int64 updated_at = 5;
+}

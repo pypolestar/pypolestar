@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package dtlinternet;
+
+// Last known GPS location, served from a top-level "dtlinternet" package
+// (not under services.vehiclestates.*, unlike the other new services here).
+// Field layout cross-referenced from public reverse-engineering projects.
+// Spot-checked live: returned coordinates that correctly placed a real
+// vehicle in its actual city, ruling out latitude/longitude being swapped.
+
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
+
+message Location {
+  double longitude = 1;
+  double latitude = 2;
+  Timestamp timestamp = 3;
+}
+
+message LastParkedLocation {
+  string vin = 1;
+  Location location = 2;
+  bool stale = 3;
+}

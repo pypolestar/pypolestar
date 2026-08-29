@@ -648,7 +648,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "gql", extras = ["httpx"], specifier = ">=3.5.2" },
-    { name = "grpcio", specifier = ">=1.75.1" },
+    { name = "grpcio", specifier = ">=1.80.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "protobuf", specifier = ">=6.31.1" },
     { name = "pydantic", specifier = ">=2.13.4" },

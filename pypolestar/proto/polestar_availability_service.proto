@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package services.vehiclestates.availability;
+
+import "polestar_availability.proto";
+
+// gRPC service: services.vehiclestates.availability.AvailabilityService (C3 host)
+// Both methods confirmed by public extraction.
+
+message GetAvailabilityRequest {
+  string id = 1;
+  string vin = 2;
+}
+
+message GetAvailabilityResponse {
+  string id = 1;
+  string vin = 2;
+  Availability availability = 3;
+}
+
+service AvailabilityService {
+  rpc GetAvailability(GetAvailabilityRequest) returns (stream GetAvailabilityResponse);
+  rpc GetLatestAvailability(GetAvailabilityRequest) returns (GetAvailabilityResponse);
+}

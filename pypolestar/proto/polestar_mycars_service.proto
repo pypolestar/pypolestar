@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package car_information;
+
+import "polestar_mycars.proto";
+
+// gRPC service: car_information.CarInformation/GetMyCars (C3 host).
+// Confirmed unary (single response, stream closed immediately) against a
+// real account -- unlike most other services added in this fork, this one
+// was live-tested end to end, not inferred by analogy.
+
+message GetMyCarsRequest {
+  string id = 1;
+  string vin = 2;
+}
+
+service CarInformation {
+  rpc GetMyCars(GetMyCarsRequest) returns (GetMyCarsResponse);
+}
