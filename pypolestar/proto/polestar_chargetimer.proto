@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package pccs.chronos.messages.chargetimer.v2;
+
+// Live-captured against a real account with an active overnight charging
+// schedule. Only `hour` is modeled with reasonable confidence: the two
+// observed ScheduleTime values were 23 and 6, consistent with a 23:00-06:00
+// window (a very ordinary off-peak charging schedule). A minute field was
+// never observed set (proto3 omits zero-valued scalars on the wire, so this
+// is consistent with either a round-hour schedule or a minute field this
+// fork hasn't identified yet -- treat GrpcChargeScheduleData's hour-only
+// granularity as a known limitation, not a confirmed one).
+//
+// A same-valued (120) nested submessage was present on both ScheduleTime
+// occurrences; a plausible read is a timezone-offset-in-minutes wrapper
+// (120 = UTC+2, correct for Swedish summer time), but this is not confirmed
+// and is deliberately left unmapped rather than named.
+
+message ScheduleTime {
+  int32 hour = 1;
+}
+
+message ChargeTimerEntry {
+  ScheduleTime start = 1;
+  ScheduleTime end = 2;
+}
+
+message GetGlobalChargeTimerStreamResponse {
+  ChargeTimerEntry timer = 1;
+  int64 updated_at = 3;
+}

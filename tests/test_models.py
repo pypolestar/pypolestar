@@ -58,6 +58,8 @@ def test_car_information_data_polestar2(polestar2_test_data):
     assert data.registration_no == "AA-00-AA"
     assert data.model_name == "Polestar 2"
     assert data.model_year == "0000"
+    assert data.pno34 == "32ECC1"
+    assert data.structure_week == "2242"
 
 
 def test_car_information_data_polestar3(polestar3_test_data):
@@ -70,6 +72,8 @@ def test_car_information_data_polestar3(polestar3_test_data):
     assert data.registration_no == "MLB007"
     assert data.model_name == "Polestar 3"
     assert data.model_year == "0000"
+    assert data.pno34 == "35AAB2"
+    assert data.structure_week == "2318"
 
 
 def test_car_images_polestar3(polestar3_test_data):
@@ -90,6 +94,8 @@ def test_car_information_data_polestar4(polestar4_test_data):
     assert data.registration_no == "MLB007"
     assert data.model_name == "Polestar 4"
     assert data.model_year == "0000"
+    assert data.pno34 == "34CDE3"
+    assert data.structure_week == "2350"
 
 
 def test_car_battery_information_data():

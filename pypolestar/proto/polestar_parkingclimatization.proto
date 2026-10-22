@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package services.vehiclestates.parkingclimatization;
+
+// Field layout cross-referenced from public reverse-engineering projects.
+// Spot-checked live: a real vehicle returned internally consistent idle/off
+// state while parked and not climatizing, but that leaves the active-state
+// fields (temperature, seat/steering-wheel heating) unverified -- there was
+// nothing running to exercise them against.
+
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
+
+message ParkingClimatization {
+  Timestamp timestamp = 1;
+  RunningStatus running_status = 2;
+  int32 runtime_left_minutes = 3;
+  repeated ErrorType errors = 4;
+  repeated WarningType warnings = 5;
+  Ventilation ventilation = 6;
+  float current_compartment_temperature_celsius = 7;
+  float requested_compartment_temperature_celsius = 8;
+  HeatingIntensity requested_front_left_seat = 9;
+  HeatingIntensity requested_front_right_seat = 10;
+  HeatingIntensity requested_rear_left_seat = 11;
+  HeatingIntensity requested_rear_right_seat = 12;
+  HeatingIntensity requested_steering_wheel_heating = 13;
+  Timestamp started_at = 14;
+  StartReason start_reason = 15;
+  Timestamp ending_at = 16;
+  MainClimateRunningStatus main_climate_running_status = 17;
+}
+
+enum MainClimateRunningStatus {
+  MAIN_CLIMATE_RUNNING_STATUS_UNSPECIFIED = 0;
+  MAIN_CLIMATE_RUNNING_STATUS_ON = 1;
+  MAIN_CLIMATE_RUNNING_STATUS_OFF = 2;
+}
+
+enum StartReason {
+  START_REASON_UNSPECIFIED = 0;
+  START_REASON_MANUALLY_FROM_CAR = 1;
+  START_REASON_REMOTE = 2;
+  START_REASON_TIMER = 3;
+  START_REASON_KEEP_CLIMATE = 4;
+}
+
+enum HeatingIntensity {
+  HEATING_INTENSITY_UNSPECIFIED = 0;
+  HEATING_INTENSITY_OFF = 1;
+  HEATING_INTENSITY_LOW = 2;
+  HEATING_INTENSITY_MEDIUM = 3;
+  HEATING_INTENSITY_HIGH = 4;
+}
+
+enum Ventilation {
+  VENTILATION_UNSPECIFIED = 0;
+  VENTILATION_COOLING = 1;
+  VENTILATION_HEATING = 2;
+  VENTILATION_NEUTRAL = 3;
+}
+
+enum WarningType {
+  WARNING_TYPE_UNSPECIFIED = 0;
+  WARNING_TYPE_BATTERY_LOW = 1;
+  WARNING_TYPE_RUN_TIME_NEARING_LIMIT = 2;
+}
+
+enum ErrorType {
+  ERROR_TYPE_UNSPECIFIED = 0;
+  ERROR_TYPE_FUEL_LOW = 1;
+  ERROR_TYPE_BATTERY_LOW = 2;
+  ERROR_TYPE_NOT_CONNECTED_TO_POWER = 3;
+  ERROR_TYPE_NO_START_NEEDED = 4;
+  ERROR_TYPE_SERVICE_REQUIRED = 5;
+  ERROR_TYPE_TEMPORARILY_NOT_AVAILABLE = 6;
+  ERROR_TYPE_PERSISTENT_ERROR_DETECTED = 7;
+  ERROR_TYPE_REACHED_MAX_RUNTIME = 8;
+}
+
+enum RunningStatus {
+  RUNNING_STATUS_UNSPECIFIED = 0;
+  RUNNING_STATUS_ON = 1;
+  RUNNING_STATUS_OFF = 2;
+  RUNNING_STATUS_PENDING = 3;
+}

@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package services.vehiclestates.availability;
+
+// Field layout cross-referenced from public reverse-engineering projects.
+// Spot-checked live against a real vehicle (parked, idle) with a plausible,
+// internally consistent result.
+
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
+
+message Availability {
+  Timestamp timestamp = 1;
+  AvailabilityStatus availability_status = 3;
+  UnavailableReason unavailable_reason = 4;
+  UsageMode usage_mode = 5;
+}
+
+enum UsageMode {
+  USAGE_MODE_UNSPECIFIED = 0;
+  USAGE_MODE_ABANDONED = 1;
+  USAGE_MODE_INACTIVE = 2;
+  USAGE_MODE_CONVENIENCE = 3;
+  USAGE_MODE_ACTIVE = 4;
+  USAGE_MODE_DRIVING = 5;
+  USAGE_MODE_ENGINE_ON = 6;
+  USAGE_MODE_ENGINE_OFF = 7;
+}
+
+enum UnavailableReason {
+  UNAVAILABLE_REASON_UNSPECIFIED = 0;
+  UNAVAILABLE_REASON_NO_INTERNET = 1;
+  UNAVAILABLE_REASON_POWER_SAVING_MODE = 2;
+  UNAVAILABLE_REASON_CAR_IN_USE = 3;
+  UNAVAILABLE_REASON_OTA_INSTALLATION_IN_PROGRESS = 4;
+  UNAVAILABLE_REASON_STOLEN_VEHICLE_TRACKING_IN_PROGRESS = 5;
+  UNAVAILABLE_REASON_SERVICE_MODE_ACTIVE = 6;
+}
+
+enum AvailabilityStatus {
+  AVAILABILITY_STATUS_UNSPECIFIED = 0;
+  AVAILABILITY_STATUS_AVAILABLE = 1;
+  AVAILABILITY_STATUS_UNAVAILABLE = 2;
+}

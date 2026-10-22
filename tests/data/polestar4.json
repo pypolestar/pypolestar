@@ -4,7 +4,9 @@
     "internalVehicleIdentifier": "cf4bfecc-cb00-49f3-af84-4a5b21b02da6",
     "registrationNo": "MLB007",
     "modelYear": "0000",
-    "modelName": "Polestar4"
+    "modelName": "Polestar4",
+    "pno34": "34CDE3",
+    "structureWeek": "2350"
   },
   "carTelematics": {
     "health": {

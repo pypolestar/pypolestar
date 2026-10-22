@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package services.vehiclestates.health;
+
+import "polestar_health.proto";
+
+// gRPC service: services.vehiclestates.health.HealthService (C3 host)
+// Only GetHealth (streaming) has been confirmed by public extraction, so we
+// read it the same way as TargetSocService: take the first streamed message.
+
+message GetHealthRequest {
+  string id = 1;
+  string vin = 2;
+}
+
+message GetHealthResponse {
+  string id = 1;
+  string vin = 2;
+  Health health = 3;
+}
+
+service HealthService {
+  rpc GetHealth(GetHealthRequest) returns (stream GetHealthResponse);
+}

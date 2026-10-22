@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package pccs.chronos.services.v2;
+
+import "polestar_chargetimer.proto";
+import "polestar_chronos_request.proto";
+
+// gRPC service: pccs.chronos.services.v2.GlobalChargeTimerService (PCCS
+// host). Confirmed server-streaming and long-lived, same as AmpLimitService:
+// a real call received one valid message immediately, then held the
+// connection open past a 15s deadline.
+
+message GetGlobalChargeTimerStreamRequest {
+  pccs.chronos.messages.common.v1.ChronosRequest request = 1;
+}
+
+service GlobalChargeTimerService {
+  rpc GetGlobalChargeTimerStream(GetGlobalChargeTimerStreamRequest)
+      returns (stream pccs.chronos.messages.chargetimer.v2.GetGlobalChargeTimerStreamResponse);
+}

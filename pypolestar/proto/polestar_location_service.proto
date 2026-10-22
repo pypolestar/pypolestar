@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package dtlinternet;
+
+import "polestar_location.proto";
+
+// gRPC service: dtlinternet.DtlInternetService (C3 host)
+// GetLastParkedLocation is unary in the source extraction (unlike the other
+// new services here, which are all server-streaming).
+
+message LastParkedLocationRequest {
+  string vin = 1;
+}
+
+service DtlInternetService {
+  rpc GetLastParkedLocation(LastParkedLocationRequest) returns (LastParkedLocation);
+  rpc StreamLastParkedLocations(LastParkedLocationRequest) returns (stream LastParkedLocation);
+}

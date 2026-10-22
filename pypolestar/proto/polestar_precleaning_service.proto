@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package services.vehiclestates.precleaning;
+
+import "polestar_precleaning.proto";
+
+// gRPC service: services.vehiclestates.precleaning.PreCleaningService (C3 host)
+// Only GetPreCleaning (streaming) has been confirmed by public extraction.
+// A GetLatestPreCleaning unary variant is plausible (other services in this
+// family have one) but unconfirmed, so it is deliberately not declared here.
+
+message GetPreCleaningRequest {
+  string id = 1;
+  string vin = 2;
+}
+
+message GetPreCleaningResponse {
+  string id = 1;
+  string vin = 2;
+  PreCleaning pre_cleaning = 3;
+}
+
+service PreCleaningService {
+  rpc GetPreCleaning(GetPreCleaningRequest) returns (stream GetPreCleaningResponse);
+}

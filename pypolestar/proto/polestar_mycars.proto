@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package car_information;
+
+// No external schema existed for this endpoint anywhere; it was reverse-
+// engineered directly by calling it against a real account and decoding
+// the raw response. Only the fields with a confirmed, ground-truth match
+// (vin, model_name, model_year, market, registration_no all matched the
+// account's already-known values exactly; installed_software_version
+// appeared twice in unrelated parts of the same response) are modeled here.
+// The real response has ~80 more fields per car (capability flags, factory
+// option codes, etc.) that are structurally visible but not confidently
+// namable from one account's data; they are left unmapped (protobuf
+// silently preserves them as unknown fields rather than erroring, so
+// omitting them here is safe).
+
+message CarDetails {
+  string vin = 1;
+  string model_name = 6;
+  string model_year = 7;
+  // Confirmed by appearing twice in the same real response (once here, once
+  // in an unmapped diagnostics sub-block) with an identical value.
+  string installed_software_version = 9;
+  string market = 10;
+}
+
+message MyCarEntry {
+  CarDetails details = 1;
+  string registration_no = 4;
+}
+
+message GetMyCarsResponse {
+  // "GetMyCars" (plural) and the wrapping shape strongly suggest a list;
+  // only ever observed with exactly one entry (single-car account), which
+  // is indistinguishable on the wire from a singular field, so `repeated`
+  // is a safe, forward-compatible choice either way.
+  repeated MyCarEntry cars = 1;
+}
