@@ -5,9 +5,9 @@ from urllib.parse import parse_qs
 import httpx
 import pytest
 
-from pypolestar.auth import OidcConfiguration, PolestarAuth, _upgrade_to_https
+from pypolestar.auth import MAX_LOGIN_REDIRECTS, OidcConfiguration, PolestarAuth, _is_redirect_uri, _upgrade_to_https
 from pypolestar.const import OIDC_REDIRECT_URI
-from pypolestar.exceptions import PolestarAuthFailedException, PolestarAuthMfaRequired
+from pypolestar.exceptions import PolestarAuthException, PolestarAuthFailedException, PolestarAuthMfaRequired
 
 AUTHORIZATION_ENDPOINT = "https://polestarid.eu.polestar.com/as/authorization.oauth2"
 TOKEN_ENDPOINT = "https://polestarid.eu.polestar.com/as/token.oauth2"
@@ -127,6 +127,59 @@ def test_upgrade_to_https_only_for_polestar_hosts() -> None:
     assert _upgrade_to_https("http://polestar.com/") == "https://polestar.com/"
     assert _upgrade_to_https("http://example.com/x") == "http://example.com/x"
     assert _upgrade_to_https("http://notpolestar.com/x") == "http://notpolestar.com/x"
+
+
+def test_is_redirect_uri_exact_endpoint() -> None:
+    assert _is_redirect_uri(OIDC_REDIRECT_URI)
+    assert _is_redirect_uri(f"{OIDC_REDIRECT_URI}?code=c&state=s")
+    assert not _is_redirect_uri(f"{OIDC_REDIRECT_URI}-extra?code=c")
+    assert not _is_redirect_uri(f"{OIDC_REDIRECT_URI}/sub?code=c")
+    assert not _is_redirect_uri(OIDC_REDIRECT_URI.replace("https://", "http://"))
+
+
+def test_callback_lookalike_is_followed_not_used() -> None:
+    lookalike = f"{OIDC_REDIRECT_URI}-extra?code=wrong-code"
+    requests: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        requests.append(url)
+        if url.startswith(AUTHORIZATION_ENDPOINT):
+            return redirect(lookalike)
+        if url == lookalike:
+            return redirect(f"{OIDC_REDIRECT_URI}?code=right-code")
+        raise AssertionError(f"Unexpected request {request.method} {url}")
+
+    assert asyncio.run(make_auth(handler)._get_code()) == "right-code"
+    assert lookalike in requests
+
+
+def redirect_chain_handler(hops: int) -> Callable[[httpx.Request], httpx.Response]:
+    """Authorization endpoint followed by `hops` redirects, the last one to the redirect URI."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if url.startswith(AUTHORIZATION_ENDPOINT):
+            step = 1
+        else:
+            step = int(httpx.URL(url).params["step"]) + 1
+        if step == hops:
+            return redirect(f"{OIDC_REDIRECT_URI}?code=chain-code")
+        return redirect(f"https://polestarid.eu.polestar.com/hop?step={step}")
+
+    return handler
+
+
+def test_redirect_limit_inclusive() -> None:
+    # MAX_LOGIN_REDIRECTS fetches after the authorization request are allowed
+    handler = redirect_chain_handler(MAX_LOGIN_REDIRECTS + 1)
+    assert asyncio.run(make_auth(handler)._get_code()) == "chain-code"
+
+
+def test_redirect_limit_exceeded() -> None:
+    handler = redirect_chain_handler(MAX_LOGIN_REDIRECTS + 2)
+    with pytest.raises(PolestarAuthException, match="Too many redirects"):
+        asyncio.run(make_auth(handler)._get_code())
 
 
 def test_keycloak_absolute_login_action() -> None:

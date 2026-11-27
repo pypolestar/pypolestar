@@ -45,6 +45,13 @@ def b64urlencode(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).decode().rstrip("=")
 
 
+def _is_redirect_uri(url: str) -> bool:
+    """Return True if url is the OIDC redirect URI (any query string allowed)."""
+    parsed = urlparse(url)
+    expected = urlparse(OIDC_REDIRECT_URI)
+    return (parsed.scheme, parsed.netloc, parsed.path) == (expected.scheme, expected.netloc, expected.path)
+
+
 def _upgrade_to_https(url: str) -> str:
     """Use HTTPS for Polestar hosts, which redirect plain HTTP to HTTPS anyway.
 
@@ -362,13 +369,15 @@ class PolestarAuth:
         The redirect URI itself is not fetched; the code is read from the Location header.
         """
 
-        for _ in range(MAX_LOGIN_REDIRECTS):
+        for fetches in range(MAX_LOGIN_REDIRECTS + 1):
             self.latest_call_code = result.status_code
             if result.status_code not in REDIRECT_STATUS_CODES:
                 return result
             location = urljoin(str(result.url), result.headers.get("location", ""))
-            if location.startswith(OIDC_REDIRECT_URI) or urlparse(location).scheme not in ("http", "https"):
+            if _is_redirect_uri(location) or urlparse(location).scheme not in ("http", "https"):
                 return result
+            if fetches == MAX_LOGIN_REDIRECTS:
+                break
             location = _upgrade_to_https(location)
             result = await self.client_session.get(location, timeout=HTTPX_TIMEOUT, follow_redirects=False)
 
@@ -381,7 +390,7 @@ class PolestarAuth:
         if result.status_code not in REDIRECT_STATUS_CODES:
             return None
         location = urljoin(str(result.url), result.headers.get("location", ""))
-        if not location.startswith(OIDC_REDIRECT_URI):
+        if not _is_redirect_uri(location):
             return None
         return httpx.URL(location).params.get("code")
 
