@@ -5,7 +5,7 @@ from urllib.parse import parse_qs
 import httpx
 import pytest
 
-from pypolestar.auth import OidcConfiguration, PolestarAuth
+from pypolestar.auth import OidcConfiguration, PolestarAuth, _upgrade_to_https
 from pypolestar.const import OIDC_REDIRECT_URI
 from pypolestar.exceptions import PolestarAuthFailedException, PolestarAuthMfaRequired
 
@@ -101,6 +101,32 @@ def test_keycloak_get_token() -> None:
     assert auth.access_token == "access"
     assert auth.refresh_token == "refresh"
     assert auth.is_token_valid()
+
+
+def test_http_redirect_upgraded_to_https() -> None:
+    server = KeycloakServer()
+    resume_http = "http://polestarid.eu.polestar.com/as/abc/resume/as/authorization.ping"
+    resume_https = resume_http.replace("http://", "https://")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if url == PINGFEDERATE_CALLBACK:
+            server.requests.append(request)
+            return redirect(resume_http)
+        if url == resume_https:
+            server.requests.append(request)
+            return redirect(f"{OIDC_REDIRECT_URI}?code=final-code")
+        return server(request)
+
+    assert asyncio.run(make_auth(handler)._get_code()) == "final-code"
+    assert all(r.url.scheme == "https" for r in server.requests)
+
+
+def test_upgrade_to_https_only_for_polestar_hosts() -> None:
+    assert _upgrade_to_https("http://polestarid.eu.polestar.com/x?a=1") == "https://polestarid.eu.polestar.com/x?a=1"
+    assert _upgrade_to_https("http://polestar.com/") == "https://polestar.com/"
+    assert _upgrade_to_https("http://example.com/x") == "http://example.com/x"
+    assert _upgrade_to_https("http://notpolestar.com/x") == "http://notpolestar.com/x"
 
 
 def test_keycloak_absolute_login_action() -> None:

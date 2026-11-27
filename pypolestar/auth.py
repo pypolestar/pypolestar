@@ -45,6 +45,19 @@ def b64urlencode(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).decode().rstrip("=")
 
 
+def _upgrade_to_https(url: str) -> str:
+    """Use HTTPS for Polestar hosts, which redirect plain HTTP to HTTPS anyway.
+
+    Polestar ID can return a plain http:// Location during login; following it
+    as-is would send the request (and any non-secure cookies) unencrypted.
+    """
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    if parsed.scheme == "http" and (host == "polestar.com" or host.endswith(".polestar.com")):
+        return parsed._replace(scheme="https").geturl()
+    return url
+
+
 def _unescape_js_url(value: str) -> str:
     """Undo the JS/HTML escaping Keycloak applies to URLs in kcContext."""
     return html.unescape(value.replace("\\/", "/"))
@@ -356,6 +369,7 @@ class PolestarAuth:
             location = urljoin(str(result.url), result.headers.get("location", ""))
             if location.startswith(OIDC_REDIRECT_URI) or urlparse(location).scheme not in ("http", "https"):
                 return result
+            location = _upgrade_to_https(location)
             result = await self.client_session.get(location, timeout=HTTPX_TIMEOUT, follow_redirects=False)
 
         raise PolestarAuthException("Too many redirects during login")
