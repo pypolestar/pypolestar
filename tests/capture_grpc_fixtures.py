@@ -27,11 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pypolestar.auth import PolestarAuth  # noqa: E402
 from pypolestar.grpc_client import PolestarGrpcClient  # noqa: E402
-from pypolestar.proto import (  # noqa: E402
-    polestar_battery_service_pb2,
-    polestar_chronos_request_pb2,
-    polestar_target_soc_pb2,
-)
+from pypolestar.proto import polestar_battery_service_pb2, polestar_chronos_request_pb2, polestar_target_soc_pb2  # noqa: E402
 
 # Fixed anonymized values used in place of real identifiers.
 ANON_VIN = "YSMYKEAE7RB000000"
