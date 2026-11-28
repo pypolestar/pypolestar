@@ -27,3 +27,7 @@ class PolestarNoDataException(PolestarApiException):
 
 class PolestarAuthUnavailable(PolestarAuthException):
     """Exception for unavailable authentication."""
+
+
+class PolestarAuthMfaRequired(PolestarAuthFailedException):
+    """Exception for a login that requires an unsupported additional step (e.g. one-time code)."""

@@ -1,11 +1,13 @@
 import asyncio
 import base64
 import hashlib
+import html
 import logging
 import os
 import re
 from datetime import datetime, timedelta, timezone
 from json import JSONDecodeError
+from typing import NoReturn
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -20,13 +22,53 @@ from .const import (
     OIDC_SCOPE,
     TOKEN_REFRESH_WINDOW_MIN,
 )
-from .exceptions import PolestarAuthException, PolestarAuthFailedException, PolestarAuthUnavailable
+from .exceptions import (
+    PolestarAuthException,
+    PolestarAuthFailedException,
+    PolestarAuthMfaRequired,
+    PolestarAuthUnavailable,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+# The Keycloak login page embeds a kcContext object with the form target in
+# "loginAction" and the page type in "pageId" (e.g. "login", or an OTP step).
+KEYCLOAK_LOGIN_ACTION_RE = re.compile(r'"loginAction":\s*"([^"]+)"')
+KEYCLOAK_PAGE_ID_RE = re.compile(r'"pageId":\s*"([^"]+)"')
+KEYCLOAK_INVALID_CREDENTIALS = "Invalid username or password"
+KEYCLOAK_COOKIE_DOMAIN = "auth.polestar.com"
+
+REDIRECT_STATUS_CODES = (301, 302, 303, 307, 308)
+MAX_LOGIN_REDIRECTS = 10
 
 
 def b64urlencode(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).decode().rstrip("=")
+
+
+def _is_redirect_uri(url: str) -> bool:
+    """Return True if url is the OIDC redirect URI (any query string allowed)."""
+    parsed = urlparse(url)
+    expected = urlparse(OIDC_REDIRECT_URI)
+    return (parsed.scheme, parsed.netloc, parsed.path) == (expected.scheme, expected.netloc, expected.path)
+
+
+def _upgrade_to_https(url: str) -> str:
+    """Use HTTPS for Polestar hosts, which redirect plain HTTP to HTTPS anyway.
+
+    Polestar ID can return a plain http:// Location during login; following it
+    as-is would send the request (and any non-secure cookies) unencrypted.
+    """
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    if parsed.scheme == "http" and (host == "polestar.com" or host.endswith(".polestar.com")):
+        return parsed._replace(scheme="https").geturl()
+    return url
+
+
+def _unescape_js_url(value: str) -> str:
+    """Undo the JS/HTML escaping Keycloak applies to URLs in kcContext."""
+    return html.unescape(value.replace("\\/", "/"))
 
 
 class OidcConfiguration(BaseModel):
@@ -78,6 +120,11 @@ class PolestarAuth:
         for name in OIDC_COOKIES:
             self.logger.debug("Delete cookie %s in domain %s", name, domain)
             self.client_session.cookies.delete(name=name, domain=domain)
+
+        for cookie in list(self.client_session.cookies.jar):
+            if cookie.domain.lstrip(".") == KEYCLOAK_COOKIE_DOMAIN:
+                self.logger.debug("Delete cookie %s in domain %s", cookie.name, cookie.domain)
+                self.client_session.cookies.delete(name=cookie.name, domain=cookie.domain, path=cookie.path)
 
         self.access_token = None
         self.id_token = None
@@ -239,7 +286,18 @@ class PolestarAuth:
         self._parse_token_response(response)
 
     async def _get_code(self) -> str | None:
-        resume_path = await self._get_resume_path()
+        login_page = await self._get_login_page()
+
+        # An existing identity provider session skips the login form
+        if (code := self._get_redirect_code(login_page)) is not None:
+            self.logger.debug("Login form skipped, code received directly")
+            return code
+
+        if match := KEYCLOAK_LOGIN_ACTION_RE.search(login_page.text):
+            login_action = urljoin(str(login_page.url), _unescape_js_url(match.group(1)))
+            return await self._get_code_keycloak(login_action)
+
+        resume_path = self._get_resume_path(login_page)
 
         params = self.get_params()
         data = {"pf.username": self.username, "pf.pass": self.password}
@@ -289,8 +347,8 @@ class PolestarAuth:
 
         return code
 
-    async def _get_resume_path(self):
-        """Get Resume Path from Polestar."""
+    async def _get_login_page(self) -> httpx.Response:
+        """Start the authorization flow and return the login page (or the final redirect)."""
 
         if not self.oidc_configuration:
             raise PolestarAuthException(message="No OIDC configuration")
@@ -302,8 +360,82 @@ class PolestarAuth:
             self.oidc_configuration.authorization_endpoint,
             params=params,
             timeout=HTTPX_TIMEOUT,
+            follow_redirects=False,
+        )
+        return await self._follow_login_redirects(result)
+
+    async def _follow_login_redirects(self, result: httpx.Response) -> httpx.Response:
+        """Follow redirects until a page is returned or the redirect URI is reached.
+
+        The redirect URI itself is not fetched; the code is read from the Location header.
+        """
+
+        for fetches in range(MAX_LOGIN_REDIRECTS + 1):
+            self.latest_call_code = result.status_code
+            if result.status_code not in REDIRECT_STATUS_CODES:
+                return result
+            location = urljoin(str(result.url), result.headers.get("location", ""))
+            if _is_redirect_uri(location) or urlparse(location).scheme not in ("http", "https"):
+                return result
+            if fetches == MAX_LOGIN_REDIRECTS:
+                break
+            location = _upgrade_to_https(location)
+            result = await self.client_session.get(location, timeout=HTTPX_TIMEOUT, follow_redirects=False)
+
+        raise PolestarAuthException("Too many redirects during login")
+
+    @staticmethod
+    def _get_redirect_code(result: httpx.Response) -> str | None:
+        """Return the authorization code if the response redirects to the redirect URI."""
+
+        if result.status_code not in REDIRECT_STATUS_CODES:
+            return None
+        location = urljoin(str(result.url), result.headers.get("location", ""))
+        if not _is_redirect_uri(location):
+            return None
+        return httpx.URL(location).params.get("code")
+
+    async def _get_code_keycloak(self, login_action: str) -> str:
+        """Log in on the Keycloak login page and return the authorization code.
+
+        Since November 2026, Polestar ID hands the login over to a Keycloak realm
+        on auth.polestar.com, which redirects back via Polestar ID to the redirect URI.
+        """
+
+        self.logger.debug("Keycloak login page detected")
+        result = await self.client_session.post(
+            login_action,
+            data={"username": self.username, "password": self.password, "credentialId": ""},
+            timeout=HTTPX_TIMEOUT,
+            follow_redirects=False,
         )
         self.latest_call_code = result.status_code
+
+        if result.status_code not in REDIRECT_STATUS_CODES:
+            self._raise_for_keycloak_page(result, "Keycloak login failed")
+
+        result = await self._follow_login_redirects(result)
+        if (code := self._get_redirect_code(result)) is None:
+            # e.g. a redirect to a separate page asking for a one-time code
+            self._raise_for_keycloak_page(result, "No authorization code after Keycloak login")
+        return code
+
+    @staticmethod
+    def _raise_for_keycloak_page(result: httpx.Response, message: str) -> NoReturn:
+        """Raise the most specific exception for a Keycloak page returned instead of a code."""
+
+        page_id = match.group(1) if (match := KEYCLOAK_PAGE_ID_RE.search(result.text)) else None
+        if KEYCLOAK_INVALID_CREDENTIALS in result.text:
+            raise PolestarAuthFailedException("Authentication error, invalid username/password")
+        if page_id and page_id != "login":
+            raise PolestarAuthMfaRequired(
+                f"Polestar ID requires an additional login step ({page_id}), e.g. a one-time code, "
+                "which is not supported"
+            )
+        raise PolestarAuthException(f"{message} (page {page_id or 'unknown'})", result.status_code)
+
+    def _get_resume_path(self, result: httpx.Response) -> str:
+        """Get Resume Path from the legacy PingFederate login page."""
 
         if match := re.search(r'(?:url|action):\s*"(.+)"', result.text):
             resume_path = match.group(1)
