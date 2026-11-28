@@ -210,6 +210,37 @@ def test_keycloak_mfa_required() -> None:
         asyncio.run(auth._get_code())
 
 
+def test_keycloak_mfa_required_after_redirect() -> None:
+    otp_url = "https://auth.polestar.com/realms/polestar/login-actions/required-action?execution=otp"
+    server = KeycloakServer(login_response=redirect(otp_url))
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if str(request.url) == otp_url:
+            server.requests.append(request)
+            return httpx.Response(200, text=keycloak_page(page_id="login-otp"))
+        return server(request)
+
+    auth = make_auth(handler)
+    with pytest.raises(PolestarAuthMfaRequired):
+        asyncio.run(auth._get_code())
+    with pytest.raises(PolestarAuthMfaRequired):
+        asyncio.run(auth.get_token())
+
+
+def test_keycloak_no_code_after_redirect() -> None:
+    dead_end = "https://polestarid.eu.polestar.com/sp/eyJxyz/error"
+    server = KeycloakServer(login_response=redirect(dead_end))
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if str(request.url) == dead_end:
+            server.requests.append(request)
+            return httpx.Response(200, text="<html>error</html>")
+        return server(request)
+
+    with pytest.raises(PolestarAuthException, match="No authorization code after Keycloak login"):
+        asyncio.run(make_auth(handler)._get_code())
+
+
 def test_mfa_required_is_not_wrapped_by_get_token() -> None:
     page = keycloak_page(page_id="login-otp")
     auth = make_auth(KeycloakServer(login_response=httpx.Response(200, text=page)))

@@ -7,6 +7,7 @@ import os
 import re
 from datetime import datetime, timedelta, timezone
 from json import JSONDecodeError
+from typing import NoReturn
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -411,20 +412,27 @@ class PolestarAuth:
         self.latest_call_code = result.status_code
 
         if result.status_code not in REDIRECT_STATUS_CODES:
-            page_id = match.group(1) if (match := KEYCLOAK_PAGE_ID_RE.search(result.text)) else None
-            if KEYCLOAK_INVALID_CREDENTIALS in result.text:
-                raise PolestarAuthFailedException("Authentication error, invalid username/password")
-            if page_id and page_id != "login":
-                raise PolestarAuthMfaRequired(
-                    f"Polestar ID requires an additional login step ({page_id}), e.g. a one-time code, "
-                    "which is not supported"
-                )
-            raise PolestarAuthException(f"Keycloak login failed (page {page_id or 'unknown'})", result.status_code)
+            self._raise_for_keycloak_page(result, "Keycloak login failed")
 
         result = await self._follow_login_redirects(result)
         if (code := self._get_redirect_code(result)) is None:
-            raise PolestarAuthException("No authorization code after Keycloak login", result.status_code)
+            # e.g. a redirect to a separate page asking for a one-time code
+            self._raise_for_keycloak_page(result, "No authorization code after Keycloak login")
         return code
+
+    @staticmethod
+    def _raise_for_keycloak_page(result: httpx.Response, message: str) -> NoReturn:
+        """Raise the most specific exception for a Keycloak page returned instead of a code."""
+
+        page_id = match.group(1) if (match := KEYCLOAK_PAGE_ID_RE.search(result.text)) else None
+        if KEYCLOAK_INVALID_CREDENTIALS in result.text:
+            raise PolestarAuthFailedException("Authentication error, invalid username/password")
+        if page_id and page_id != "login":
+            raise PolestarAuthMfaRequired(
+                f"Polestar ID requires an additional login step ({page_id}), e.g. a one-time code, "
+                "which is not supported"
+            )
+        raise PolestarAuthException(f"{message} (page {page_id or 'unknown'})", result.status_code)
 
     def _get_resume_path(self, result: httpx.Response) -> str:
         """Get Resume Path from the legacy PingFederate login page."""
