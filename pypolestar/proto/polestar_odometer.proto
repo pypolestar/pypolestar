@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package services.vehiclestates.odometer;
+
+// Adds trip meters and average speed, which the GraphQL carTelematicsV2.odometer
+// query does not serve (CarOdometerData has fields for these but they are
+// always None today). Field layout cross-referenced from public
+// reverse-engineering projects. Spot-checked live: odometer_meters matched
+// the existing, already-trusted GraphQL field byte-for-byte on the same
+// account/vehicle, on the same call.
+
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
+
+message Odometer {
+  Timestamp timestamp = 1;
+  int32 odometer_meters = 2;
+  float trip_meter_manual_km = 3;
+  float trip_meter_automatic_km = 4;
+  int32 average_speed_km_per_hour = 5;
+  int32 average_speed_km_per_hour_automatic = 6;
+  float trip_meter_since_charge_km = 7;
+  int32 average_speed_km_per_hour_since_charge = 8;
+}

@@ -4,7 +4,9 @@
     "internalVehicleIdentifier": "88888888-aaaa-bbbb-cccc-aaa11aaa1111",
     "registrationNo": "AA-00-AA",
     "modelYear": "0000",
-    "modelName": "Polestar 2"
+    "modelName": "Polestar 2",
+    "pno34": "32ECC1",
+    "structureWeek": "2242"
   },
   "getOdometerData": {
     "averageSpeedKmPerHour": 32,

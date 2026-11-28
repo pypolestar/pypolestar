@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package services.vehiclestates.odometer;
+
+import "polestar_odometer.proto";
+
+// gRPC service: services.vehiclestates.odometer.OdometerService (C3 host)
+// Only GetOdometer (streaming) has been confirmed by public extraction.
+
+message GetOdometerRequest {
+  string id = 1;
+  string vin = 2;
+}
+
+message GetOdometerResponse {
+  string id = 1;
+  string vin = 2;
+  Odometer odometer = 3;
+}
+
+service OdometerService {
+  rpc GetOdometer(GetOdometerRequest) returns (stream GetOdometerResponse);
+}

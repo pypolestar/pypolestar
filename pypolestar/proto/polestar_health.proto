@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package services.vehiclestates.health;
+
+// Richer, gRPC-only counterpart to the GraphQL carTelematicsV2.health query.
+// Adds per-tyre pressure and exterior light warnings the GraphQL API does
+// not expose. Field layout cross-referenced from public reverse-engineering
+// projects, not from pypolestar's own decompilation. Spot-checked live:
+// service intervals and all warning enums (brake fluid, coolant, oil,
+// service, low-voltage battery, 21 individual lights) came back as real,
+// non-default values on a real vehicle -- confirming those field numbers.
+// The tyre-pressure-kPa/warning fields came back empty on that vehicle
+// specifically; every other field in the message decoded correctly, so this
+// looks like a hardware/model-year gap rather than a wrong field number,
+// but it's confirmed absent there, not confirmed present-and-correct
+// elsewhere.
+
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
+
+message Health {
+  Timestamp timestamp = 1;
+  uint32 engine_hours_to_service = 2;
+  uint32 days_to_service = 3;
+  uint32 distance_to_service_km = 4;
+  ServiceWarning service_warning = 5;
+  BrakeFluidLevelWarning brake_fluid_level_warning = 6;
+  EngineCoolantLevelWarning engine_coolant_level_warning = 7;
+  OilLevelWarning oil_level_warning = 8;
+  TyrePressureWarning front_left_tyre_pressure_warning = 9;
+  TyrePressureWarning front_right_tyre_pressure_warning = 10;
+  TyrePressureWarning rear_left_tyre_pressure_warning = 11;
+  TyrePressureWarning rear_right_tyre_pressure_warning = 12;
+  WasherFluidLevelWarning washer_fluid_level_warning = 13;
+  ExteriorLightWarning brake_light_left_warning = 14;
+  ExteriorLightWarning brake_light_center_warning = 15;
+  ExteriorLightWarning brake_light_right_warning = 16;
+  ExteriorLightWarning fog_light_front_warning = 17;
+  ExteriorLightWarning fog_light_rear_warning = 18;
+  ExteriorLightWarning position_light_front_left_warning = 19;
+  ExteriorLightWarning position_light_front_right_warning = 20;
+  ExteriorLightWarning position_light_rear_left_warning = 21;
+  ExteriorLightWarning position_light_rear_right_warning = 22;
+  ExteriorLightWarning high_beam_left_warning = 23;
+  ExteriorLightWarning high_beam_right_warning = 24;
+  ExteriorLightWarning low_beam_left_warning = 25;
+  ExteriorLightWarning low_beam_right_warning = 26;
+  ExteriorLightWarning daytime_running_light_left_warning = 27;
+  ExteriorLightWarning daytime_running_light_right_warning = 28;
+  ExteriorLightWarning turn_indication_front_left_warning = 30;
+  ExteriorLightWarning turn_indication_front_right_warning = 31;
+  ExteriorLightWarning turn_indication_rear_left_warning = 32;
+  ExteriorLightWarning turn_indication_rear_right_warning = 33;
+  ExteriorLightWarning registration_plate_light_warning = 34;
+  ExteriorLightWarning side_mark_lights_warning = 35;
+  LowVoltageBatteryWarning low_voltage_battery_warning = 38;
+  float front_left_tyre_pressure_kpa = 39;
+  float front_right_tyre_pressure_kpa = 40;
+  float rear_left_tyre_pressure_kpa = 41;
+  float rear_right_tyre_pressure_kpa = 42;
+  float front_tyres_reference_pressure_kpa = 43;
+  float rear_tyres_reference_pressure_kpa = 44;
+}
+
+enum LowVoltageBatteryWarning {
+  LOW_VOLTAGE_BATTERY_WARNING_UNSPECIFIED = 0;
+  LOW_VOLTAGE_BATTERY_WARNING_NO_WARNING = 1;
+  LOW_VOLTAGE_BATTERY_WARNING_TOO_LOW = 2;
+}
+
+enum ExteriorLightWarning {
+  EXTERIOR_LIGHT_WARNING_UNSPECIFIED = 0;
+  EXTERIOR_LIGHT_WARNING_NO_WARNING = 1;
+  EXTERIOR_LIGHT_WARNING_FAILURE = 2;
+}
+
+enum WasherFluidLevelWarning {
+  WASHER_FLUID_LEVEL_WARNING_UNSPECIFIED = 0;
+  WASHER_FLUID_LEVEL_WARNING_NO_WARNING = 1;
+  WASHER_FLUID_LEVEL_WARNING_TOO_LOW = 2;
+}
+
+enum TyrePressureWarning {
+  TYRE_PRESSURE_WARNING_UNSPECIFIED = 0;
+  TYRE_PRESSURE_WARNING_NO_WARNING = 1;
+  TYRE_PRESSURE_WARNING_VERY_LOW_PRESSURE = 2;
+  TYRE_PRESSURE_WARNING_LOW_PRESSURE = 3;
+  TYRE_PRESSURE_WARNING_HIGH_PRESSURE = 4;
+}
+
+enum OilLevelWarning {
+  OIL_LEVEL_WARNING_UNSPECIFIED = 0;
+  OIL_LEVEL_WARNING_NO_WARNING = 1;
+  OIL_LEVEL_WARNING_SERVICE_REQUIRED = 2;
+  OIL_LEVEL_WARNING_TOO_LOW = 3;
+  OIL_LEVEL_WARNING_TOO_HIGH = 4;
+}
+
+enum EngineCoolantLevelWarning {
+  ENGINE_COOLANT_LEVEL_WARNING_UNSPECIFIED = 0;
+  ENGINE_COOLANT_LEVEL_WARNING_NO_WARNING = 1;
+  ENGINE_COOLANT_LEVEL_WARNING_TOO_LOW = 2;
+}
+
+enum BrakeFluidLevelWarning {
+  BRAKE_FLUID_LEVEL_WARNING_UNSPECIFIED = 0;
+  BRAKE_FLUID_LEVEL_WARNING_NO_WARNING = 1;
+  BRAKE_FLUID_LEVEL_WARNING_TOO_LOW = 2;
+  BRAKE_FLUID_LEVEL_WARNING_CRITICALLY_LOW = 3;
+}
+
+enum ServiceWarning {
+  SERVICE_WARNING_UNSPECIFIED = 0;
+  SERVICE_WARNING_NO_WARNING = 1;
+  SERVICE_WARNING_UNKNOWN_WARNING = 2;
+  SERVICE_WARNING_REGULAR_MAINTENANCE_ALMOST_TIME_FOR_SERVICE = 3;
+  SERVICE_WARNING_ENGINE_HOURS_ALMOST_TIME_FOR_SERVICE = 4;
+  SERVICE_WARNING_DISTANCE_DRIVEN_ALMOST_TIME_FOR_SERVICE = 5;
+  SERVICE_WARNING_REGULAR_MAINTENANCE_TIME_FOR_SERVICE = 6;
+  SERVICE_WARNING_ENGINE_HOURS_TIME_FOR_SERVICE = 7;
+  SERVICE_WARNING_DISTANCE_DRIVEN_TIME_FOR_SERVICE = 8;
+  SERVICE_WARNING_REGULAR_MAINTENANCE_OVERDUE_FOR_SERVICE = 9;
+  SERVICE_WARNING_ENGINE_HOURS_OVERDUE_FOR_SERVICE = 10;
+  SERVICE_WARNING_DISTANCE_DRIVEN_OVERDUE_FOR_SERVICE = 11;
+}

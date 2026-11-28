@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package services.vehiclestates.parkingclimatization;
+
+import "polestar_parkingclimatization.proto";
+
+// gRPC service: services.vehiclestates.parkingclimatization.ParkingClimatizationService (C3 host)
+// GetLatestParkingClimatization (unary) is the confirmed path used by
+// independent client implementations; GetParkingClimatization (streaming) is
+// included by analogy with the Battery/Availability Get/GetLatest pairing
+// but has not itself been directly confirmed.
+
+message GetParkingClimatizationRequest {
+  string id = 1;
+  string vin = 2;
+}
+
+message GetParkingClimatizationResponse {
+  string id = 1;
+  string vin = 2;
+  ParkingClimatization parking_climatization = 3;
+}
+
+service ParkingClimatizationService {
+  rpc GetParkingClimatization(GetParkingClimatizationRequest) returns (stream GetParkingClimatizationResponse);
+  rpc GetLatestParkingClimatization(GetParkingClimatizationRequest) returns (GetParkingClimatizationResponse);
+}

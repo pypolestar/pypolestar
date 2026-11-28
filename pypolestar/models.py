@@ -15,7 +15,20 @@ from .enum import (
     OilLevelWarning,
     ServiceWarning,
 )
-from .grpc_models import GrpcBatteryData, GrpcTargetSocData
+from .grpc_models import (
+    GrpcAmpLimitData,
+    GrpcAvailabilityData,
+    GrpcBatteryData,
+    GrpcChargeScheduleData,
+    GrpcClimateData,
+    GrpcExteriorData,
+    GrpcHealthData,
+    GrpcLocationData,
+    GrpcMyCarsData,
+    GrpcOdometerData,
+    GrpcPreCleaningData,
+    GrpcTargetSocData,
+)
 from .utils import GqlDict, get_field_name_int, get_field_name_str, get_field_name_timestamp
 
 # Examples: "78 kWh", "78.3 kWh", "78.3 KWH"
@@ -84,6 +97,8 @@ class CarInformationData(CarBaseInformation):
     registration_no: str | None = None
     model_name: str | None = None
     model_year: str | None = None
+    pno34: str | None = None
+    structure_week: str | None = None
 
     # Deprecated fields - to be removed in future versions
     registration_date: date | None = None
@@ -120,6 +135,8 @@ class CarInformationData(CarBaseInformation):
             registration_no=get_field_name_str("registrationNo", data),
             model_name=model_name,
             model_year=get_field_name_str("modelYear", data),
+            pno34=get_field_name_str("pno34", data),
+            structure_week=get_field_name_str("structureWeek", data),
             image_url=None,
         )
 
@@ -339,5 +356,17 @@ class CarDataCollection(BaseModel):
     # from gRPC API
     battery_data: GrpcBatteryData | None = None
     target_soc: GrpcTargetSocData | None = None
+
+    # from gRPC API (best-effort; see grpc_models.py for confidence notes)
+    grpc_exterior: GrpcExteriorData | None = None
+    grpc_health: GrpcHealthData | None = None
+    grpc_odometer: GrpcOdometerData | None = None
+    grpc_climate: GrpcClimateData | None = None
+    grpc_availability: GrpcAvailabilityData | None = None
+    grpc_precleaning: GrpcPreCleaningData | None = None
+    grpc_location: GrpcLocationData | None = None
+    grpc_mycars: GrpcMyCarsData | None = None
+    grpc_amp_limit: GrpcAmpLimitData | None = None
+    grpc_charge_schedule: GrpcChargeScheduleData | None = None
 
     model_config = ConfigDict(frozen=True)

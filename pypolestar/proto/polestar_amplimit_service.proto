@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package pccs.chronos.services.v1;
+
+import "polestar_amplimit.proto";
+
+// gRPC service: pccs.chronos.services.v1.AmpLimitService (PCCS host).
+// Confirmed server-streaming and long-lived (a real call received one valid
+// message immediately, then held the connection open past a 15s deadline
+// rather than closing) -- read the same way as get_target_soc: first
+// message only, not "wait for the stream to end".
+
+service AmpLimitService {
+  rpc GetAmpLimit(pccs.chronos.messages.amplimit.v1.GetAmpLimitRequest)
+      returns (stream pccs.chronos.messages.amplimit.v1.GetAmpLimitResponse);
+}

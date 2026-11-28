@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package services.vehiclestates.exterior;
+
+import "polestar_exterior.proto";
+
+// gRPC service: services.vehiclestates.exterior.ExteriorService (C3 host)
+// GetLatestExterior (unary) is inferred by analogy with BatteryService's
+// confirmed Get/GetLatest pairing; only GetExterior (streaming) has been
+// directly confirmed by public extraction. GetLatestExterior itself was
+// live-tested successfully against a real vehicle.
+
+message GetExteriorRequest {
+  string id = 1;
+  string vin = 2;
+}
+
+message GetExteriorResponse {
+  string id = 1;
+  string vin = 2;
+  Exterior exterior = 3;
+}
+
+service ExteriorService {
+  rpc GetExterior(GetExteriorRequest) returns (stream GetExteriorResponse);
+  rpc GetLatestExterior(GetExteriorRequest) returns (GetExteriorResponse);
+}
